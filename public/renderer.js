@@ -147,6 +147,7 @@ class App {
   async bootstrap () {
     await this.init_theme()
     await this.init_zoom()
+    await this.handler.init()
     this.init_worker()
     if (this.sync_mode === "default" || this.sync_mode === "reindex" || this.sync_mode === "reindex_folder") {
       await this.synchronize()
@@ -225,8 +226,11 @@ class App {
   async init_zoom () {
     let zoom = await this.user.settings.where({ key: "zoom" }).first()
     if (zoom) {
-      window.electronAPI.zoom(zoom.val)
+      this.zoom = parseInt(zoom.val)
+      let size = Math.max(this.zoom/100, 0.5)
+      document.body.style.setProperty("--font-size", `${size}rem`);
     }
+    //this.handler.resized()
   }
   async init_theme () {
     this.theme = await this.user.settings.where({ key: "theme" }).first()
@@ -360,6 +364,7 @@ class App {
     // start observing
     this.observer.unobserve(document.querySelector(".end-marker"));
     this.observer.observe(document.querySelector(".end-marker"));
+//    this.handler.resized()
   }
   async draw () {
     document.querySelector(".search").value = (this.query && this.query.length ? this.query : "")

@@ -1,5 +1,6 @@
 :root {
   --card-width: 200px;
+  --font-size: 1rem;
 }
 html {
   height: 100%;
@@ -128,6 +129,7 @@ body {
   background: none;
   border: none;
   cursor: pointer;
+  font-size: var(--font-size);
 }
 .card.expanded .extra-buttons {
   display: inline-block;
@@ -407,6 +409,10 @@ nav button#favorite {
 .favorites main .header h2 {
   border: none !important;
   padding-left: 0 !important;
+}
+
+.settings {
+  font-size: var(--font-size);
 }
 
 .settings input[type=range] {

@@ -36,6 +36,7 @@
       <button id='notification' class= 'hidden'><i class="fa-solid fa-bell"></i></button>
     </nav>
     <div class='settings'></div>
+    <script src="./preload.js"></script>
     <script src="./dexie.js"></script>
     <script>
     let db;
@@ -71,6 +72,7 @@
         location.href = "/"
       }
     }
+
     const renderSettings = async () => {
       let res = await user.folders.toArray()
       let rows = res.map((r) => {
@@ -87,8 +89,10 @@
       if (currentZoom) {
         zoom = currentZoom.val
       } else {
-        zoom = window.electronAPI.getzoom() * 100
+//        zoom = window.electronAPI.getzoom() * 100
+        zoom = Math.round(100 / window.devicePixelRatio)
       }
+//      document.body.style.zoom = `${zoom}%`
 
       document.querySelector(".settings").innerHTML = `<main>
       <div class='header'>
@@ -126,7 +130,7 @@
       <div class='rows'>
         <div class='row currentZoom'>${zoom}%</div>
         <div class='row'>
-          <input type='range' min="50" max="200" value="${zoom}" step="1">
+          <input type='range' min="10" max="200" value="${zoom}" step="1">
         </div>
       </div>
       <br><br>
@@ -162,7 +166,8 @@
       document.querySelector("input[type=range]").addEventListener("input", async (e) => {
         e.preventDefault()
         e.stopPropagation()
-        window.electronAPI.zoom(e.target.value)
+        //window.electronAPI.zoom(e.target.value)
+        let zoom = parseInt(e.target.value)
         await user.settings.put({ key: "zoom", val: e.target.value })
         e.target.closest(".rows").querySelector(".currentZoom").innerHTML = "" + e.target.value + "%"
       })

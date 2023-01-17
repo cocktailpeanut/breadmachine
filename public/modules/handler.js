@@ -1,18 +1,43 @@
 class Handler {
   resized () {
+    this.defaultwidth = 200;
+    if (this.app && this.app.zoom) {
+      this.cardwidth = this.defaultwidth * this.app.zoom / 100;
+    } else {
+      this.cardwidth = this.defaultwidth
+    }
+    console.log("this.defaultwidth", this.defaultwidth)
+    console.log("this.cardwidth", this.cardwidth)
     let width = document.body.clientWidth;
-    let cardwidth = 200;
-    let leftover = width % cardwidth;
-    let count = Math.floor(width / cardwidth)
-    let new_cardwidth = "" + (cardwidth + leftover / count - 2) + "px"
-    document.body.style.setProperty("--card-width", new_cardwidth)
+    console.log("width", width)
+    let leftover = width % this.cardwidth;
+    console.log("leftover", leftover)
+    let count = Math.floor(width / this.cardwidth)
+
+    let new_cardwidth
+    let i = 0;
+    while(true) {
+      new_cardwidth = this.cardwidth + leftover / count - i
+      console.log("compare", new_cardwidth * count, width)
+      if (new_cardwidth * count <= width) {
+        break;
+      }
+      i++
+    }
+    console.log("new_cardwidth", new_cardwidth)
+
+
+
+    document.body.style.setProperty("--card-width", `${new_cardwidth}px`)
   }
   constructor (app) {
     this.app = app
+  }
+  async init() {
     let id;
     window.addEventListener('resize', () => {
       clearTimeout(id);
-      id = setTimeout(this.resized, 500);
+      id = setTimeout(this.resized, 1000);
     });
 
     this.resized()
