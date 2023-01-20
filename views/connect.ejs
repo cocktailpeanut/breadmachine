@@ -13,10 +13,36 @@
     <% } %>
     <style>
     body.default #reindex2 {
+    /*
+      background: royalblue;
+      color: white;
+      */
+      border: 1px solid royalblue;
+      color: royalblue;
+      background: none;
+    }
+    body.dark #reindex2 {
+      border: 1px solid cornflowerblue;
+      color: cornflowerblue;
+      background: none;
+    }
+    body.default #select {
+      border: 1px solid royalblue;
       background: royalblue;
       color: white;
     }
-    body.dark #reindex2 {
+    body.dark #select {
+      border: 1px solid cornflowerblue;
+      background: cornflowerblue;
+      color: white;
+    }
+    body.default button.add {
+      border: 1px solid royalblue;
+      background: royalblue;
+      color: white;
+    }
+    body.dark button.add {
+      border: 1px solid cornflowerblue;
       background: cornflowerblue;
       color: white;
     }
@@ -40,7 +66,6 @@
     </nav>
     <div class='settings'></div>
     <script src="./modules/api.js"></script>
-    <script src="./modules/zoomer.js"></script>
     <script src="./dexie.js"></script>
     <script>
     let db;
@@ -78,20 +103,47 @@
       }
     }
 
+    const recommended_template = (r) => {
+      return `<div class='row'>
+      <div>${r}</div>
+      <div class='flexible'></div>
+      <button class='add' data-name='${r}'><i class="fa-solid fa-folder-plus"></i> Connect</button> 
+</div>`
+    }
+    const template = (r) => {
+      return `<div class='row'>
+      <div>${r}</div>
+      <div class='flexible'></div>
+      <!--<button class='reindex-folder' data-name='${r}'><i class="fa-solid fa-rotate"></i> Re-index</button> -->
+      <button class='del' data-name='${r}'><i class="fa-solid fa-xmark"></i> Disconnect</button> 
+</div>`
+    }
+
     const renderSettings = async () => {
+
+
       let res = await user.folders.toArray()
+      res = res.map((r) => {
+        return r.name
+      })
       let rows
       if (res.length > 0) {
-        rows = res.map((r) => {
-          return `<div class='row'>
-          <div>${r.name}</div>
-          <div class='flexible'></div>
-          <button class='reindex-folder' data-name='${r.name}'><i class="fa-solid fa-rotate"></i> Re-index</button> 
-      </div>`
-        }).join("")
+        rows = res.map(template).join("")
       } else {
-        rows = "<div class='center-faded'>To get started, click 'edit' to connect folders</div>"
+        <% if (agent === "web") { %>
+          rows = `<div class='center-faded'>Connect folders from the recommended list below.</div>`
+        <% } else { %>
+          rows = "<div class='center-faded'>Click 'connect a folder' to connect a folder to breadboard.<br><br>Or select from the recommended folders below.</div>"
+        <% } %>
       }
+
+
+      let defaults = await api.defaults()
+      console.log(defaults)
+      let recommended = defaults.filter((item) => {
+        return !res.includes(item)
+      })
+
 
       let currentZoom = await user.settings.where({ key: "zoom" }).first()
       let zoom;
@@ -103,118 +155,73 @@
       }
 //      document.body.style.zoom = `${zoom}%`
 
+      let recommendedHtml = ""
+      if (recommended.length > 0) {
+        recommendedHtml = `<br><br>
+        <div class='header'>
+          <h2>Recommended</h2>
+          <div>&nbsp;&nbsp;</div>
+          <button class='customize'><i class="fa-regular fa-pen-to-square"></i> edit</button>
+        </div>
+        <div class='explain hidden'>To edit the recommended list,
+          <ol>
+            <li>Open <code><%=config%></code></li>
+            <li>Update the list under the <code>connect</code> attribute</li>
+            <li>Restart the app</li>
+          </ol>
+          <div>Here's what the YAML file may look like:</div>
+  <pre>connect:
+    - /root/invokeai/outputs
+    - /root/stable-diffusion-webui/outputs</pre></div>
+        <div class='rows'>
+        ${recommended.map(recommended_template).join("")}
+        </div>`
+      }
+
       document.querySelector(".settings").innerHTML = `<main>
       <div class='header'>
-        <h2>Version</h2>
-      </div>
-      <div class='rows'>
-        <div class='row'>${VERSION}</div>
+        <a class='link' href="/settings"><i class="fa-solid fa-angles-left"></i> settings</a></a>
       </div>
       <br><br>
       <div class='header'>
         <h2>Connected Folders</h2>
-        <div>&nbsp;&nbsp;</div>
-        <a href="/connect" class='btn primary'><i class="fa-regular fa-pen-to-square"></i> Edit</a>
+        <div class='flexible'></div>
+        <% if (agent !== "web") { %>
+          <button id='select'><i class="fa-solid fa-folder-plus"></i> Connect a folder</button>
+        <% } %>
+        <a id='reindex2' class='btn hidden' href="/?synchronize=default"><i class="fa-solid fa-rotate"></i> Synchronize</a>
       </div>
       <div class='rows'>
       ${rows}
       </div>
-      <br><br>
-      <div class='header'>
-        <h2>Theme</h2>
-        <div class='flexible'></div>
-      </div>
-      <div class='rows'>
-        <div class='row'>
-          <button id='dark-theme'><i class="fa-solid fa-moon"></i> Dark</button>
-          <button id='default-theme'><i class="fa-regular fa-sun"></i> Light</button>
-        </div>
-      </div>
-      <br><br>
-      <div class='header'>
-        <h2>Zoom</h2>
-        <div class='flexible'></div>
-      </div>
-      <div class='rows'>
-        <div class="card ds-selectable">
-          <div class="grab" draggable="true">
-            <button class="gofullscreen"><i class="fa-solid fa-expand"></i></button>
-            <button class="open-file"><i class="fa-solid fa-up-right-from-square"></i></button>
-            <button class="favorite-file"><i class="fa-regular fa-heart"></i></button>
-          </div>
-<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAQAAABecRxxAAAEmElEQVR42u3UMQEAAAzCsOHf9CQggERCj+aAWZEADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAwAAkAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADADoHnvSAgHwhtNTAAAAAElFTkSuQmCC">
-        </div>
-        <div class='row currentZoom'>${zoom}%</div>
-        <div class='row'>
-          <input type='range' min="10" max="200" value="${zoom}" step="1">
-        </div>
-      </div>
-      <br><br>
-      <div class='header'>
-        <h2>Re-index</h2>
-        <div class='flexible'></div>
-      </div>
-      <div class='rows'>
-        <div class='row'>
-          <button id='reindex'><i class="fa-solid fa-rotate"></i> Re-index from Scratch</button>
-        </div>
-      </div>
-      <% if (agent === "electron") { %>
-        <br><br>
-        <div class='header'>
-          <h2>Debug</h2>
-          <div class='flexible'></div>
-        </div>
-        <div class='rows'>
-          <div class='row'>
-            <button id='debug'><i class="fa-solid fa-terminal"></i> Debug</button>
-          </div>
-        </div>
-      <% } %>
+      ${recommendedHtml}
     </main>`
-      var app = { zoom }
-      const zoomer = new Zoomer(app)
-      await zoomer.init()
-
+      <% if (query.sync_needed) { %>
+        document.querySelector(".settings #reindex2").classList.remove("hidden")
+      <% } %>
       document.querySelector("#prev").addEventListener("click", (e) => {
         history.back()
       })
       document.querySelector("#next").addEventListener("click", (e) => {
         history.forward()
       })
-      document.querySelector("input[type=range]").addEventListener("input", async (e) => {
+      <% if (agent !== "web") { %>
+      document.querySelector("#select").addEventListener('click', async (e) => {
         e.preventDefault()
         e.stopPropagation()
-        //window.electronAPI.zoom(e.target.value)
-        let zoom = parseInt(e.target.value)
-        await user.settings.put({ key: "zoom", val: e.target.value })
-        e.target.closest(".rows").querySelector(".currentZoom").innerHTML = "" + e.target.value + "%"
-        app.zoom = parseInt(e.target.value)
-        zoomer.resized()
-      })
-      document.querySelector("#reindex").addEventListener("click", async (e) => {
-        e.preventDefault()
-        e.stopPropagation()
-
-        // 1. Delete the DB
-        await db.delete()
-
-        // 2. Delete the checkpoint table
-        await user.checkpoints.clear()
-
-
-        // 2. Send to reindex (the home page will read the localStorage to automatically fill the favorites and settings DB after reindexing)
-        location.href = "/?synchronize=reindex"
-      })
-      <% if (agent === "electron") { %>
-      document.querySelector("#debug").addEventListener('click', async (e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        api.debug()
+        let paths = await api.select()
+        if (paths && paths.length > 0) {
+          for(let name of paths) {
+            await user.folders.put({ name: name })
+          }
+          location.href = location.href + "?sync_needed=true"
+        }
       })
       <% } %>
       document.querySelector(".settings").addEventListener("click", async (e) => {
         let delTarget = (e.target.classList.contains("del") ? e.target : e.target.closest(".del"))
+        let addTarget = (e.target.classList.contains("add") ? e.target : e.target.closest(".add"))
+        let customizeTarget = (e.target.classList.contains("customize") ? e.target : e.target.closest(".customize"))
         let reindexTarget = (e.target.classList.contains("reindex-folder") ? e.target : e.target.closest(".reindex-folder"))
         if (delTarget) {
           e.preventDefault()
@@ -230,6 +237,12 @@
             await user.checkpoints.where({ root_path: name }).delete()
             location.href = location.href
           }
+        } else if (addTarget) {
+          e.preventDefault()
+          e.stopPropagation()
+          let name = addTarget.getAttribute("data-name")
+          await user.folders.put({ name: name })
+          location.href = location.href + "?sync_needed=true"
         } else if (reindexTarget) {
           e.preventDefault()
           e.stopPropagation()
@@ -239,19 +252,16 @@
           // Delete the checkpoint
           await user.checkpoints.where({ root_path: name }).delete()
           location.href = "/?synchronize=reindex_folder&sync_folder="+encodeURIComponent(name)
+        } else if (customizeTarget) {
+          e.preventDefault()
+          e.stopPropagation()
+          document.querySelector(".explain").classList.toggle("hidden")
         }
       })
-      document.querySelector("#dark-theme").addEventListener('click', async (e) => {
+      document.querySelector("#reindex2").addEventListener("click", async (e) => {
         e.preventDefault()
         e.stopPropagation()
-        await user.settings.put({ key: "theme", val: "dark" })
-        await init_theme()
-      })
-      document.querySelector("#default-theme").addEventListener('click', async (e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        await user.settings.put({ key: "theme", val: "default" })
-        await init_theme()
+        location.href = "/?synchronize=default"
       })
       document.querySelector(".search").addEventListener("keyup", (e) => {
         if (e.key === "Enter") {

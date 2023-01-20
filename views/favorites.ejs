@@ -8,6 +8,9 @@
     <link href="/css/regular.min.css" rel="stylesheet">
     <link href="/css/brands.min.css" rel="stylesheet">
     <link href="./global.css" rel="stylesheet" />
+    <% if (agent === "electron") { %>
+    <link href="./electron.css" rel="stylesheet" />
+    <% } %>
   </head>
   <body class="<%=theme%>">
     <div id='bar'></div>

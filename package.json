@@ -1,71 +1,17 @@
 {
-  "name": "breadboard",
+  "name": "breadpress",
   "version": "0.2.1",
   "description": "",
   "email": "cocktailpeanuts@proton.me",
-  "main": "main.js",
+  "main": "index.js",
   "scripts": {
-    "start": "electron .",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder -mwl",
-    "postinstall": "electron-builder install-app-deps"
-  },
-  "build": {
-    "appId": "net.candywrap.breadboard",
-    "extraResources": [
-      "./script/**"
-    ],
-    "dmg": {
-      "background": "./assets/background.png",
-      "contents": [
-        {
-          "x": 130,
-          "y": 250
-        },
-        {
-          "x": 410,
-          "y": 80,
-          "type": "file",
-          "path": "./script/patch.command"
-        },
-        {
-          "x": 410,
-          "y": 250,
-          "type": "link",
-          "path": "/Applications"
-        }
-      ]
-    },
-    "mac": {
-      "category": "utility",
-      "target": [
-        {
-          "target": "default",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ]
-    },
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64",
-            "ia32"
-          ]
-        }
-      ]
-    }
+    "start": "node ./bin/server"
   },
   "author": "https://twitter.com/cocktailpeanut",
   "license": "MIT",
   "dependencies": {
     "axios": "^1.2.2",
     "ejs": "^3.1.8",
-    "electron-context-menu": "^3.6.1",
     "escape-html": "^1.0.3",
     "exifr": "^7.1.3",
     "express": "^4.18.2",
@@ -78,9 +24,5 @@
     "picomatch": "^2.3.1",
     "png-metadata": "^1.0.2",
     "xml-formatter": "^3.2.0"
-  },
-  "devDependencies": {
-    "electron": "^22.0.0",
-    "electron-builder": "^23.6.0"
   }
 }

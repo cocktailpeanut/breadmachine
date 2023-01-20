@@ -1,0 +1,9 @@
+nav > * {
+  -webkit-app-region: no-drag !important;
+  cursor: auto;
+}
+nav {
+  padding: 32px 10px 5px;
+  cursor: grab;
+  -webkit-app-region: drag;
+}

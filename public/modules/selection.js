@@ -1,7 +1,8 @@
 class Selection {
-  constructor (app) {
+  constructor (app, api) {
     this.els = []
     this.app = app
+    this.api = api
     this.addTagInput = document.querySelector('#add-tag-field')
     this.addtags = tagger(this.addTagInput, {
       allow_duplicates: false,
@@ -105,6 +106,8 @@ class Selection {
         this.ds.start()
       }
     }
+
+
     document.querySelector(".container").ondragstart = (event) => {
       event.preventDefault()
       event.stopPropagation()
@@ -113,12 +116,16 @@ class Selection {
       let dragging = this.ds.isDragging(event)
       if (this.els.length > 0) {
         if (this.els.includes(draggingTarget)) {
-          this.ds.stop()
-          let filenames = this.els.map((el) => {
-            return el.querySelector("img").getAttribute("data-src")
-          })
-          this.ds.setSelection(this.els)
-          window.electronAPI.startDrag(filenames)
+          console.log("this.api.config", this.api.config)
+          if (this.api.config && this.api.config.agent === "electron") {
+            console.log("startdrag")
+            this.ds.stop()
+            let filenames = this.els.map((el) => {
+              return el.querySelector("img").getAttribute("data-src")
+            })
+            this.ds.setSelection(this.els)
+            this.api.startDrag(filenames)
+          }
         } else {
           if (!multiselecting) {
             this.ds.setSelection([draggingTarget])
@@ -144,7 +151,7 @@ class Selection {
       let selected = this.els.map((el) => {
         return el.getAttribute("data-src")
       })
-      let response = await window.electronAPI.gm({
+      let response = await this.api.gm({
         cmd: "set",
         args: [
           selected,
@@ -180,7 +187,7 @@ class Selection {
       let selected = this.els.map((el) => {
         return el.getAttribute("data-src")
       })
-      let response = await window.electronAPI.gm({
+      let response = await this.api.gm({
         cmd: "set",
         args: [
           selected,
@@ -243,8 +250,7 @@ class Selection {
           document.querySelector("footer").classList.add("hidden")
         }
       });
-      this.ds.subscribe("dragstart", (e) => {
-        console.log("#dragselect dragstart", e)
+      this.ds.subscribe("dragstart", async (e) => {
       })
 //    }
   }
@@ -252,7 +258,7 @@ class Selection {
     let selected = this.els.map((el) => {
       return el.getAttribute("data-src")
     })
-    await window.electronAPI.del(selected)
+    await this.api.del(selected)
     let res = await this.app.db.files.where("file_path").anyOf(selected).delete()
     for(let el of this.els) {
       el.classList.remove("expanded")

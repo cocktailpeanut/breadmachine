@@ -1,4 +1,6 @@
 const { fdir } = require("fdir");
+const yaml = require('js-yaml');
+const xmlFormatter = require('xml-formatter');
 const fastq = require('fastq')
 const SSE = require('express-sse');
 const fs = require('fs')
@@ -21,6 +23,7 @@ class IPC {
       }
       if (config.theme) this.theme = config.theme
     }
+    this.config = config
     if (!this.ipc) {
       this.ipc = {
         handle: (name, fn) => {
@@ -37,6 +40,12 @@ class IPC {
       console.log("send", msg)
       this.sse.send(JSON.stringify(msg))
     }, 1)
+    this.ipc.handle("theme", (event, _theme) => {
+      this.ipc.theme = _theme
+//      if (mainWindow.setTitleBarOverlay) {
+//        mainWindow.setTitleBarOverlay(titleBarOverlay(server.ipc.theme))
+//      }
+    })
     this.ipc.handle('sync', async (event, rpc) => {
       console.log("## sync from rpc", rpc)
       let filter
@@ -130,48 +139,47 @@ class IPC {
       }
     })
     this.ipc.handle('del', async (event, filenames) => {
-      for(filename of filenames) {
+      for(let filename of filenames) {
         console.log("deleting", filename)
         await fs.promises.rm(filename).catch((e) => {
           console.log("error", e)
         })
       }
     })
-    this.ipc.on('ondragstart', (event, filePaths) => {
-      if (event && event.sender) {
-        event.sender.startDrag({
-          files: filePaths,
-          icon: filePaths[0],
-        })
-      }
-    })
-    this.ipc.handle('select', async (event) => {
-      let res = await dialog.showOpenDialog({ properties: ['openDirectory', 'showHiddenFiles'] })
-      if (!res.canceled && res.filePaths && res.filePaths.length > 0) {
-        return res.filePaths
-      }
-    })
+//    this.ipc.on('ondragstart', (event, filePaths) => {
+//      if (event && event.sender) {
+//        event.sender.startDrag({
+//          files: filePaths,
+//          icon: filePaths[0],
+//        })
+//      }
+//    })
     this.ipc.handle('defaults', async (event) => {
-      let home = os.homedir()
-      return [
-        path.resolve(home, "invokeai", "outputs"),
-        path.resolve(home, ".diffusionbee", "images"),
-      ]
+      let str = await fs.promises.readFile(this.config.config, "utf8")
+      const attrs = yaml.load(str)
+      const home = os.homedir()
+      const connect = attrs.connect.map((c) => {
+        let homeResolved = c.replace(/^~(?=$|\/|\\)/, home)
+        let relativeResolved = path.resolve(home, homeResolved)
+        return relativeResolved
+      })
+      console.log("connect", connect)
+      return connect
     })
-    this.ipc.handle('copy', (event, text) => {
-      clipboard.writeText(text)
-    })
+//    this.ipc.handle('copy', (event, text) => {
+//      clipboard.writeText(text)
+//    })
     this.ipc.handle('gm', async (event, rpc) => {
       if (rpc.cmd === "set" || rpc.cmd === "rm") {
-        let res = await gm[rpc.cmd](...rpc.args)
+        let res = await this.gm[rpc.cmd](...rpc.args)
         return res
       } 
     })
-    this.ipc.handle('open', async (event, file_path) => {
-      await shell.showItemInFolder(file_path)
-    })
+//    this.ipc.handle('open', async (event, file_path) => {
+//      await shell.showItemInFolder(file_path)
+//    })
     this.ipc.handle('xmp', async (event, file_path) => {
-      let res = await gm.get(file_path)
+      let res = await this.gm.get(file_path)
       return xmlFormatter(res.chunk.data.replace("XML:com.adobe.xmp\x00\x00\x00\x00\x00", ""), {
         indentation: "  "
       })

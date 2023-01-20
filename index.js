@@ -1,12 +1,18 @@
-const xmlFormatter = require('xml-formatter');
 const path = require('path')
 const express = require('express')
 const getport = require('getport')
 const Updater = require('./updater/index')
 const packagejson = require('./package.json')
 const IPC = require('./ipc')
-class Server {
+class Breadpress {
   async init(config) {
+    if (config) {
+      if (!config.agent) {
+        config.agent = "web"
+      }
+    } else {
+      config = { agent: "web" }
+    }
     this.config = config
     this.VERSION = packagejson.version
     this.need_update = null
@@ -39,6 +45,7 @@ class Server {
         this.current_sorter_code = req.query.sorter_code
       }
       res.render("index", {
+        agent: this.config.agent,
         platform: process.platform,
         query: req.query,
         version: this.VERSION,
@@ -57,6 +64,18 @@ class Server {
 
     app.get("/settings", (req, res) => {
       res.render("settings", {
+        agent: this.config.agent,
+        platform: process.platform,
+        version: this.VERSION,
+        query: req.query,
+        theme: this.ipc.theme
+      })
+    })
+    app.get("/connect", (req, res) => {
+      console.log("connect")
+      res.render("connect", {
+        config: this.config.config,
+        agent: this.config.agent,
         platform: process.platform,
         version: this.VERSION,
         query: req.query,
@@ -65,30 +84,7 @@ class Server {
     })
     app.get("/favorites", (req, res) => {
       res.render("favorites", {
-        platform: process.platform,
-        version: this.VERSION,
-        theme: this.ipc.theme
-      })
-    })
-    app.get("/help", (req, res) => {
-      let items = [{
-        name: "discord",
-        description: "ask questions and share feedback",
-        icon: "fa-brands fa-discord",
-        href: "https://discord.gg/6MJ6MQScnX"
-      }, {
-        name: "twitter",
-        description: "stay updated on Twitter",
-        icon: "fa-brands fa-twitter",
-        href: "https://twitter.com/cocktailpeanut"
-      }, {
-        name: "github",
-        description: "feature requests and bug report",
-        icon: "fa-brands fa-github",
-        href: "https://github.com/cocktailpeanut/breadboard/issues"
-      }]
-      res.render("help", {
-        items,
+        agent: this.config.agent,
         platform: process.platform,
         version: this.VERSION,
         theme: this.ipc.theme
@@ -137,4 +133,4 @@ class Server {
     }
   }
 }
-module.exports = Server
+module.exports = Breadpress

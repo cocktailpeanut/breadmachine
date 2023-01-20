@@ -1,16 +1,18 @@
 class App {
-  constructor (query, sorter_code, need_update, sync_mode, sync_folder) {
+  constructor (query, sorter_code, need_update, sync_mode, sync_folder, api) {
+    this.api = api
     this.query = query
     this.sorter_code = sorter_code
     this.sync_mode = sync_mode
     this.sync_folder = sync_folder
     this.checkpoints = { }
-    this.selection = new Selection(this)
+    this.selection = new Selection(this, api)
     this.navbar = new Navbar(this);
     if (need_update) {
       this.navbar.notification(need_update)
     }
-    this.handler = new Handler(this);
+    this.handler = new Handler(this, api);
+    this.zoomer = new Zoomer(this)
     if (!this.bar) {
       this.bar = new Nanobar({
         target: document.querySelector("#bar")
@@ -108,11 +110,11 @@ class App {
     // Set up db with defaults and version
     await this.user.settings.put({ key: "version", val: VERSION })
 
-    // bootstrap the DB with defaults (only the first time)
-    let defaults = await window.electronAPI.defaults()
-    for(let d of defaults) {
-      await this.user.folders.put({ name: d }).catch((e) => { })
-    }
+//    // bootstrap the DB with defaults (only the first time)
+//    let defaults = await this.api.defaults()
+//    for(let d of defaults) {
+//      await this.user.folders.put({ name: d }).catch((e) => { })
+//    }
 
     await this.persist()
 
@@ -147,7 +149,7 @@ class App {
   async bootstrap () {
     await this.init_theme()
     await this.init_zoom()
-    await this.handler.init()
+    await this.zoomer.init()
     this.init_worker()
     if (this.sync_mode === "default" || this.sync_mode === "reindex" || this.sync_mode === "reindex_folder") {
       await this.synchronize()
@@ -207,7 +209,7 @@ class App {
     this.checkpoints[root_path] = btime
   }
   init_rpc() {
-    window.electronAPI.onMsg(async (_event, value) => {
+    this.api.listen(async (_event, value) => {
       queueMicrotask(async () => {
         if (value.meta) {
           let response = await this.insert(value.meta).catch((e) => {
@@ -227,17 +229,14 @@ class App {
     let zoom = await this.user.settings.where({ key: "zoom" }).first()
     if (zoom) {
       this.zoom = parseInt(zoom.val)
-      let size = Math.max(this.zoom/100, 0.5)
-      document.body.style.setProperty("--font-size", `${size}rem`);
     }
-    //this.handler.resized()
   }
   async init_theme () {
     this.theme = await this.user.settings.where({ key: "theme" }).first()
     if (!this.theme) this.theme = { val: "default" }
     document.body.className = this.theme.val
     document.querySelector("html").className = this.theme.val
-    window.electronAPI.theme(this.theme.val)
+    this.api.theme(this.theme.val)
   }
   init_worker () {
     if (!this.worker) {
@@ -250,8 +249,15 @@ class App {
             document.querySelector("#sync").disabled = false
             document.querySelector("#sync i").classList.remove("fa-spin")
             this.selection.init()
+            this.zoomer.resized()
           }, 0)
         } else {
+          // if this.query is null => we're on the home page
+          // if homepage, and no result, tell people to connect some folders
+          if (!this.query) {
+            document.querySelector(".empty-container").innerHTML = `Connect a folder to get started.<br><br>
+<a href="/connect" class='btn'><i class="fa-solid fa-plug"></i> Connect</a>`
+          }
           document.querySelector(".end-marker .caption i").classList.remove("fa-spin")
         }
       }
@@ -266,7 +272,7 @@ class App {
       this.sync_counter = 0
       this.sync_complete = false
       await new Promise((resolve, reject) => {
-        window.electronAPI.sync({ paths })
+        this.api.sync({ paths })
         let interval = setInterval(() => {
           if (this.sync_complete) {
             clearInterval(interval)
@@ -296,7 +302,7 @@ class App {
             } else if (this.sync_mode === "reindex") {
               config.force = true
             }
-            window.electronAPI.sync(config)
+            this.api.sync(config)
             let interval = setInterval(() => {
               if (this.sync_complete) {
                 clearInterval(interval)
@@ -323,7 +329,7 @@ class App {
             root_path: this.sync_folder,
             force: true,
           }
-          window.electronAPI.sync(config)
+          this.api.sync(config)
           let interval = setInterval(() => {
             if (this.sync_complete) {
               clearInterval(interval)
@@ -364,7 +370,6 @@ class App {
     // start observing
     this.observer.unobserve(document.querySelector(".end-marker"));
     this.observer.observe(document.querySelector(".end-marker"));
-//    this.handler.resized()
   }
   async draw () {
     document.querySelector(".search").value = (this.query && this.query.length ? this.query : "")
@@ -406,7 +411,8 @@ if (document.querySelector("#query")) {
 }
 console.log("QUERY", QUERY)
 
-const app = new App(QUERY, SORTER, NEED_UPDATE, SYNC_MODE, SYNC_FOLDER);
+const api = new API({ agent: AGENT });
+const app = new App(QUERY, SORTER, NEED_UPDATE, SYNC_MODE, SYNC_FOLDER, api);
 (async () => {
   await app.init()
 })();

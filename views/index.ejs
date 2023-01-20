@@ -12,6 +12,9 @@
     <link href="./select.css" rel="stylesheet" />
     <link href="./viewer.css" rel="stylesheet" />
     <link href="./global.css" rel="stylesheet" />
+    <% if (agent === "electron") { %>
+    <link href="./electron.css" rel="stylesheet" />
+    <% } %>
   </head>
   <body class="<%=theme%>">
     <div id='bar'></div>
@@ -50,6 +53,7 @@
       <br><br>
       <span>loading</span>
     </div>
+    <div class='empty-container'></div>
     <div class='container'>
       <div class='content'></div>
     </div>
@@ -102,9 +106,11 @@
       <% } %>
       var SYNC_MODE = "<%=sync_mode%>"
       var SYNC_FOLDER = "<%=sync_folder%>"
+      var AGENT = "<%=agent%>"
       document.querySelector("select option[value='<%=current_sorter_code%>']").setAttribute("selected", "selected")
     </script>
-    <script src="./preload.js"></script>
+    <script src="./modules/api.js"></script>
+    <script src="./modules/zoomer.js"></script>
     <script src="./viewer.js"></script>
     <script src="./select.js"></script>
     <script src='./popper.js'></script>
@@ -120,6 +126,6 @@
     <script src="./modules/navbar.js"></script>
     <script src="./modules/handler.js"></script>
     <script src="./modules/card.js"></script>
-    <script src='./renderer.js'></script>
+    <script src='./modules/app.js'></script>
   </body>
 </html>

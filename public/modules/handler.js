@@ -1,46 +1,7 @@
 class Handler {
-  resized () {
-    this.defaultwidth = 200;
-    if (this.app && this.app.zoom) {
-      this.cardwidth = this.defaultwidth * this.app.zoom / 100;
-    } else {
-      this.cardwidth = this.defaultwidth
-    }
-    console.log("this.defaultwidth", this.defaultwidth)
-    console.log("this.cardwidth", this.cardwidth)
-    let width = document.body.clientWidth;
-    console.log("width", width)
-    let leftover = width % this.cardwidth;
-    console.log("leftover", leftover)
-    let count = Math.floor(width / this.cardwidth)
-
-    let new_cardwidth
-    let i = 0;
-    while(true) {
-      new_cardwidth = this.cardwidth + leftover / count - i
-      console.log("compare", new_cardwidth * count, width)
-      if (new_cardwidth * count <= width) {
-        break;
-      }
-      i++
-    }
-    console.log("new_cardwidth", new_cardwidth)
-
-
-
-    document.body.style.setProperty("--card-width", `${new_cardwidth}px`)
-  }
-  constructor (app) {
+  constructor (app, api) {
     this.app = app
-  }
-  async init() {
-    let id;
-    window.addEventListener('resize', () => {
-      clearTimeout(id);
-      id = setTimeout(this.resized, 1000);
-    });
-
-    this.resized()
+    this.api = api
 
     document.querySelector(".container").addEventListener("click", async (e) => {
       e.preventDefault()
@@ -79,7 +40,7 @@ class Handler {
         });
         this.viewer.show()
       } else if (openFileTarget) {
-        window.electronAPI.open(openFileTarget.getAttribute("data-src"))
+        this.api.open(openFileTarget.getAttribute("data-src"))
       } else if (favoriteFileTarget) {
         let data_favorited = favoriteFileTarget.getAttribute("data-favorited")
         let is_favorited = (data_favorited === "true" ? true : false)
@@ -88,7 +49,7 @@ class Handler {
         let favClass
         if (is_favorited) {
           // unfavorite
-          let response = await window.electronAPI.gm({
+          let response = await this.api.gm({
             cmd: "set",
             args: [
               src,
@@ -106,7 +67,7 @@ class Handler {
           favoriteFileTarget.closest(".card").querySelector("tr[data-key=tags] td span[data-tag='tag:favorite']").remove()
         } else {
           // favorite
-          let response = await window.electronAPI.gm({
+          let response = await this.api.gm({
             cmd: "set",
             args: [
               src,
@@ -200,7 +161,7 @@ class Handler {
         this.app.navbar.input(key, val)
       } else if (displayMetaTarget) {
         let file_path = displayMetaTarget.getAttribute("data-src")
-        let xml = await window.electronAPI.xmp(file_path)
+        let xml = await this.api.xmp(file_path)
         let textarea = displayMetaTarget.closest(".xmp").querySelector(".slot")
         textarea.classList.toggle("hidden")
         textarea.value = xml;
@@ -210,7 +171,7 @@ class Handler {
         // except the clipboard button
         // if the clicked element is the delete button, delete
         if (clipboardTarget) {
-          window.electronAPI.copy(clipboardTarget.getAttribute("data-value"))
+          this.api.copy(clipboardTarget.getAttribute("data-value"))
           clipboardTarget.querySelector("i").classList.remove("fa-regular")
           clipboardTarget.querySelector("i").classList.remove("fa-clone")
           clipboardTarget.querySelector("i").classList.add("fa-solid")
