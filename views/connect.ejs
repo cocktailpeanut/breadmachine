@@ -136,25 +136,17 @@
           rows = "<div class='center-faded'>Click 'connect a folder' to connect a folder to breadboard.<br><br>Or select from the recommended folders below.</div>"
         <% } %>
       }
-
-
       let defaults = await api.defaults()
-      console.log(defaults)
       let recommended = defaults.filter((item) => {
         return !res.includes(item)
       })
-
-
       let currentZoom = await user.settings.where({ key: "zoom" }).first()
       let zoom;
       if (currentZoom) {
         zoom = currentZoom.val
       } else {
-//        zoom = window.electronAPI.getzoom() * 100
         zoom = Math.round(100 / window.devicePixelRatio)
       }
-//      document.body.style.zoom = `${zoom}%`
-
       let recommendedHtml = ""
       if (recommended.length > 0) {
         recommendedHtml = `<br><br>

@@ -121,7 +121,6 @@ class Handler {
         }
 
         if (key === "tags") {
-          console.log({ key , val })
           if (val.split(" ").length > 1) {
             val = val.replace(/^tag:(.+)/, 'tag:"$1"')
           }
@@ -157,7 +156,6 @@ class Handler {
       } else if (tokenPopupTarget) {
         let key = tokenPopupTarget.getAttribute("data-key")
         let val = tokenPopupTarget.getAttribute("data-value")
-        console.log({ key , val })
         this.app.navbar.input(key, val)
       } else if (displayMetaTarget) {
         let file_path = displayMetaTarget.getAttribute("data-src")

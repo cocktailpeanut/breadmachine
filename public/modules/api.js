@@ -31,22 +31,16 @@ class API {
     if (window.electronAPI) {
       window.electronAPI.startDrag(fileNames)
     }
-//    ipcRenderer.send('ondragstart', fileNames)
   }
   listen (callback) {
     this.es.addEventListener('message', (event) => {
-      console.log("e", event.data)
       callback(event, JSON.parse(JSON.parse(event.data)))
     })
   }
   select () {
     return this.request("select")
   }
-  //copy (text) {
-  //  return this.request("copy", text)
-  //}
   copy(str) {
-
     const element = document.createElement('textarea');
     const previouslyFocusedElement = document.activeElement;
 
@@ -89,29 +83,15 @@ class API {
     return isSuccess;
   }
   open (file_path) {
-    console.log("open", file_path, this.config.agent)
     if (this.config.agent === "web") {
       window.open(`/file?file=${encodeURIComponent(file_path)}`, "_blank")
     } else {
       return this.request("open", file_path)
     }
   }
-//  zoom: (ratio) => {
-//    // ratio 50 - 200
-//    if (ratio >= 50 && ratio <= 200) {
-//      webFrame.setZoomFactor(ratio/100)
-//    }
-//  },
-//  getzoom: () => {
-//    // ratio 50 - 200
-//    return webFrame.getZoomFactor()
-//  },
   debug () {
     this.request("debug")
   }
-
-
-
   request(name, ...args) {
     return fetch("/ipc", {
       method: "post",

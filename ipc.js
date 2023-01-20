@@ -27,7 +27,6 @@ class IPC {
     if (!this.ipc) {
       this.ipc = {
         handle: (name, fn) => {
-          console.log("handle", name, fn)
           this.handlers[name] = fn
         },
         on: (name, fn) => {
@@ -36,15 +35,10 @@ class IPC {
       }
     }
     this.queue = fastq.promise(async (msg) => {
-//      mainWindow.webContents.send('msg', msg)
-      console.log("send", msg)
       this.sse.send(JSON.stringify(msg))
     }, 1)
     this.ipc.handle("theme", (event, _theme) => {
       this.ipc.theme = _theme
-//      if (mainWindow.setTitleBarOverlay) {
-//        mainWindow.setTitleBarOverlay(titleBarOverlay(server.ipc.theme))
-//      }
     })
     this.ipc.handle('sync', async (event, rpc) => {
       console.log("## sync from rpc", rpc)
@@ -93,9 +87,6 @@ class IPC {
           .withBasePath()
           .crawl(rpc.root_path)
           .withPromise()
-
-        console.log("filenames", filenames)
-
         if (filenames.length > 0) {
           let crawler;
           if (/diffusionbee/g.test(rpc.root_path)) {
@@ -129,7 +120,6 @@ class IPC {
             })
           }
         } else {
-          console.log("this.queue push")
           await this.queue.push({
             app: rpc.root_path,
             total: 1,
@@ -140,20 +130,11 @@ class IPC {
     })
     this.ipc.handle('del', async (event, filenames) => {
       for(let filename of filenames) {
-        console.log("deleting", filename)
         await fs.promises.rm(filename).catch((e) => {
           console.log("error", e)
         })
       }
     })
-//    this.ipc.on('ondragstart', (event, filePaths) => {
-//      if (event && event.sender) {
-//        event.sender.startDrag({
-//          files: filePaths,
-//          icon: filePaths[0],
-//        })
-//      }
-//    })
     this.ipc.handle('defaults', async (event) => {
       let str = await fs.promises.readFile(this.config.config, "utf8")
       const attrs = yaml.load(str)
@@ -163,21 +144,14 @@ class IPC {
         let relativeResolved = path.resolve(home, homeResolved)
         return relativeResolved
       })
-      console.log("connect", connect)
       return connect
     })
-//    this.ipc.handle('copy', (event, text) => {
-//      clipboard.writeText(text)
-//    })
     this.ipc.handle('gm', async (event, rpc) => {
       if (rpc.cmd === "set" || rpc.cmd === "rm") {
         let res = await this.gm[rpc.cmd](...rpc.args)
         return res
       } 
     })
-//    this.ipc.handle('open', async (event, file_path) => {
-//      await shell.showItemInFolder(file_path)
-//    })
     this.ipc.handle('xmp', async (event, file_path) => {
       let res = await this.gm.get(file_path)
       return xmlFormatter(res.chunk.data.replace("XML:com.adobe.xmp\x00\x00\x00\x00\x00", ""), {
@@ -186,7 +160,6 @@ class IPC {
     })
   }
   async call(name, ...args) {
-    console.log("name, args", name, args)
     let r = await this.handlers[name](null, ...args)
     return r
   }

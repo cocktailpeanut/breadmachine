@@ -116,9 +116,7 @@ class Selection {
       let dragging = this.ds.isDragging(event)
       if (this.els.length > 0) {
         if (this.els.includes(draggingTarget)) {
-          console.log("this.api.config", this.api.config)
           if (this.api.config && this.api.config.agent === "electron") {
-            console.log("startdrag")
             this.ds.stop()
             let filenames = this.els.map((el) => {
               return el.querySelector("img").getAttribute("data-src")
