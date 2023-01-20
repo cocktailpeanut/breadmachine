@@ -6,13 +6,6 @@ const packagejson = require('./package.json')
 const IPC = require('./ipc')
 class Breadpress {
   async init(config) {
-    if (config) {
-      if (!config.agent) {
-        config.agent = "web"
-      }
-    } else {
-      config = { agent: "web" }
-    }
     this.config = config
     this.VERSION = packagejson.version
     this.need_update = null
@@ -32,6 +25,11 @@ class Breadpress {
   }
   start() {
     let app = express()
+    app.use((req, res, next) => {
+      let a = req.get("user-agent")
+      req.agent = (/breadboard/.test(a) ? "electron" : "web")
+      next()
+    })
     app.use(express.static(path.resolve(__dirname, 'public')))
     app.use("/docs", express.static(path.resolve(__dirname, 'docs')))
     app.use(express.json());
@@ -45,7 +43,7 @@ class Breadpress {
         this.current_sorter_code = req.query.sorter_code
       }
       res.render("index", {
-        agent: this.config.agent,
+        agent: req.agent,
         platform: process.platform,
         query: req.query,
         version: this.VERSION,
@@ -61,10 +59,9 @@ class Breadpress {
       res.flush = () => {}; 
       next();
     }, this.ipc.sse.init);
-
     app.get("/settings", (req, res) => {
       res.render("settings", {
-        agent: this.config.agent,
+        agent: req.agent,
         platform: process.platform,
         version: this.VERSION,
         query: req.query,
@@ -72,10 +69,9 @@ class Breadpress {
       })
     })
     app.get("/connect", (req, res) => {
-      console.log("connect")
       res.render("connect", {
+        agent: req.agent,
         config: this.config.config,
-        agent: this.config.agent,
         platform: process.platform,
         version: this.VERSION,
         query: req.query,
@@ -84,7 +80,7 @@ class Breadpress {
     })
     app.get("/favorites", (req, res) => {
       res.render("favorites", {
-        agent: this.config.agent,
+        agent: req.agent,
         platform: process.platform,
         version: this.VERSION,
         theme: this.ipc.theme
@@ -94,13 +90,9 @@ class Breadpress {
       res.sendFile(req.query.file)
     })
     app.post("/ipc", async (req, res) => {
-      console.log("post ipc", req.body)
       let name = req.body.name
       let args = req.body.args
-      console.log("name", name)
-      console.log("args", args)
       let r = await this.ipc.call(name, ...args)
-      console.log("r", r)
       if (r) {
         res.json(r)
       } else {
@@ -119,7 +111,6 @@ class Breadpress {
     let res = await updater.check(releaseFeed)
     console.log("Feed", res)
     if (res.feed && res.feed.entry) {
-
       let latest = (Array.isArray(res.feed.entry) ? res.feed.entry[0] : res.feed.entry)
       if (latest.title === this.VERSION) {
         console.log("UP TO DATE", latest.title, this.VERSION)
