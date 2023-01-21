@@ -1,8 +1,12 @@
 const path = require('path')
 const express = require('express')
 const getport = require('getport')
+const os = require('os')
+const fs = require('fs')
+const yaml = require('js-yaml');
 const Updater = require('./updater/index')
 const packagejson = require('./package.json')
+const BasicAuth = require('./basicauth')
 const IPC = require('./ipc')
 class Breadpress {
   async init(config) {
@@ -17,11 +21,26 @@ class Breadpress {
         resolve(p)
       })
     })
-    this.ipc = new IPC(config)
+    this.ipc = new IPC(this, config)
     await this.updateCheck().catch((e) => {
       console.log("update check error", e)
     })
+    let settings = await this.settings()
+    console.log("settings", settings)
+    this.basicauth = new BasicAuth(settings.accounts)
     this.start()
+  }
+  async settings() {
+    let str = await fs.promises.readFile(this.config.config, "utf8")
+    const attrs = yaml.load(str)
+    const home = os.homedir()
+    const folders = attrs.folders.map((c) => {
+      let homeResolved = c.replace(/^~(?=$|\/|\\)/, home)
+      let relativeResolved = path.resolve(home, homeResolved)
+      return relativeResolved
+    })
+    attrs.folders = folders
+    return attrs
   }
   start() {
     let app = express()
@@ -30,8 +49,25 @@ class Breadpress {
       req.agent = (/breadboard/.test(a) ? "electron" : "web")
       next()
     })
+
+//    app.get("/login", (req, res) => {
+//      res.render("login", {
+//        protocol: req.protocol,
+//        host: req.get("host"),
+//        agent: req.agent
+//      })
+//    })
+//    app.get("/basicauth", this.basicauth.auth.bind(this.basicauth), (req, res) => {
+//      console.log("authorized")
+//      console.log("res", res)
+//      res.render("basicauth", {
+//        agent: req.agent
+//      })
+//    })
+
     app.use(express.static(path.resolve(__dirname, 'public')))
-    app.use("/docs", express.static(path.resolve(__dirname, 'docs')))
+    //app.use(this.basicauth.auth_redirect.bind(this.basicauth))
+    app.use(this.basicauth.auth.bind(this.basicauth))
     app.use(express.json());
 
     app.set('view engine', 'ejs');

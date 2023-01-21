@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>breadboard</title>
+    <link href="/css/fontawesome.min.css" rel="stylesheet">
+    <link href="/css/solid.min.css" rel="stylesheet">
+    <link href="/css/regular.min.css" rel="stylesheet">
+    <link href="/css/brands.min.css" rel="stylesheet">
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    </style>
+    <% if (agent === "electron") { %>
+    <link href="./electron.css" rel="stylesheet" />
+    <% } %>
+    <script>
+    function logout(url){
+      let str
+      if (url.startsWith("https:")) {
+        str = url.replace("https://", "http://" + new Date().getTime() + "@");
+      } else {
+        str = url.replace("http://", "http://" + new Date().getTime() + "@");
+      }
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange= function() {
+        if (xmlhttp.readyState==4) location.reload();
+      }
+      xmlhttp.open("GET",str,true);
+      xmlhttp.setRequestHeader("Authorization","Basic YXNkc2E6")
+      xmlhttp.send();
+      return false;
+    }
+    </script>
+  </head>
+  <body>
+    <div>
+      <h1>Breadboard</h1>
+      <!--
+      <a href="<%=protocol%>://log:out@<%=host%>/basicauth" class='btn'>Login</a>
+      -->
+      <a href="/basicauth" class='btn'>Login</a>
+    </div>
+  </body>
+</html>

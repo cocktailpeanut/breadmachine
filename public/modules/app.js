@@ -48,7 +48,12 @@ class App {
       favorites: "query, global"
     })
 
-    let legacy_exists = await Dexie.exists("breadboard")
+    let legacy_exists
+    try {
+      legacy_exists = await Dexie.exists("breadboard")
+    } catch (e) {
+      console.log("ERROR", e)
+    }
     if (legacy_exists) {
       // should only trigger once when upgrading
 
@@ -116,7 +121,11 @@ class App {
 //      await this.user.folders.put({ name: d }).catch((e) => { })
 //    }
 
-    await this.persist()
+    try {
+      await this.persist()
+    } catch (e) {
+      console.log("persist error", e)
+    }
 
   }
   async persist() {

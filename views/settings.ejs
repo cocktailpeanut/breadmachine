@@ -103,6 +103,7 @@
       }
 //      document.body.style.zoom = `${zoom}%`
 
+      let logout_url = `${location.protocol}//log:out@${location.host}`
       document.querySelector(".settings").innerHTML = `<main>
       <div class='header'>
         <h2>Version</h2>
@@ -168,6 +169,18 @@
         <div class='rows'>
           <div class='row'>
             <button id='debug'><i class="fa-solid fa-terminal"></i> Debug</button>
+          </div>
+        </div>
+      <% } %>
+      <% if (agent === "web") { %>
+        <br><br>
+        <div class='header'>
+          <h2>Session</h2>
+          <div class='flexible'></div>
+        </div>
+        <div class='rows'>
+          <div class='row'>
+            <a class='btn' href="${logout_url}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
           </div>
         </div>
       <% } %>

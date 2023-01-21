@@ -1,10 +1,8 @@
 const { fdir } = require("fdir");
-const yaml = require('js-yaml');
 const xmlFormatter = require('xml-formatter');
 const fastq = require('fastq')
 const SSE = require('express-sse');
 const fs = require('fs')
-const os = require('os')
 const path = require('path')
 const GM = require('./crawler/gm')
 const Diffusionbee = require('./crawler/diffusionbee')
@@ -14,7 +12,8 @@ class IPC {
   handle(name, fn) {
     this.handlers[name] = fn
   }
-  constructor(config) {
+  constructor(app, config) {
+    this.app = app
     this.gm = new GM()
     this.sse = new SSE();
     if (config) {
@@ -136,15 +135,8 @@ class IPC {
       }
     })
     this.ipc.handle('defaults', async (event) => {
-      let str = await fs.promises.readFile(this.config.config, "utf8")
-      const attrs = yaml.load(str)
-      const home = os.homedir()
-      const connect = attrs.connect.map((c) => {
-        let homeResolved = c.replace(/^~(?=$|\/|\\)/, home)
-        let relativeResolved = path.resolve(home, homeResolved)
-        return relativeResolved
-      })
-      return connect
+      let settings = await this.app.settings()
+      return settings.folders
     })
     this.ipc.handle('gm', async (event, rpc) => {
       if (rpc.cmd === "set" || rpc.cmd === "rm") {

@@ -1,3 +1,6 @@
-connect:
+folders:
   - ~/invokeai/outputs
   - ~/.diffusionbee/images
+accounts:
+  admin: password
+  cocktail: peanut
