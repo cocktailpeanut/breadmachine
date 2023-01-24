@@ -129,7 +129,7 @@ class Breadmachine {
       }
     })
     app.listen(this.port, () => {
-      console.log(`Breadboard listening on port ${this.port}`)
+      console.log(`Breadboard running at http://localhost:${this.port}`)
     })
     this.app = app
   }
