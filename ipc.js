@@ -20,7 +20,7 @@ class IPC {
       if (config.ipc) {
         this.ipc = config.ipc
       }
-      if (config.theme) this.theme = config.theme
+      if (config.theme) this.theme = (config.theme ? config.theme : "default")
     }
     this.config = config
     if (!this.ipc) {

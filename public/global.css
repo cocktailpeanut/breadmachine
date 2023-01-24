@@ -60,6 +60,15 @@ body.dark .empty-container {
   padding: 50px;
   text-align: center;
 }
+.warning {
+  background: firebrick;
+  color: white;
+  padding: 20px;
+  box-sizing: border-box;
+  margin-bottom: 20px;
+  font-weight: bold;
+  border-radius: 5px;
+}
 .end-marker {
   color: silver;
   text-align: center;

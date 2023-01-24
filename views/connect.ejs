@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>breadboard</title>
     <link href="/css/fontawesome.min.css" rel="stylesheet">
     <link href="/css/solid.min.css" rel="stylesheet">
@@ -148,7 +149,7 @@
         zoom = Math.round(100 / window.devicePixelRatio)
       }
       let recommendedHtml = ""
-      if (recommended.length > 0) {
+//      if (recommended.length > 0) {
         recommendedHtml = `<br><br>
         <div class='header'>
           <h2>Recommended</h2>
@@ -158,17 +159,17 @@
         <div class='explain hidden'>To edit the recommended list,
           <ol>
             <li>Open <code><%=config%></code></li>
-            <li>Update the list under the <code>connect</code> attribute</li>
+            <li>Update the <code>folders</code> list attribute</li>
             <li>Restart the app</li>
           </ol>
           <div>Here's what the YAML file may look like:</div>
-  <pre>connect:
+  <pre>folders:
     - /root/invokeai/outputs
     - /root/stable-diffusion-webui/outputs</pre></div>
         <div class='rows'>
         ${recommended.map(recommended_template).join("")}
         </div>`
-      }
+//      }
 
       document.querySelector(".settings").innerHTML = `<main>
       <div class='header'>

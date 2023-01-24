@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>breadboard</title>
     <link href="/css/fontawesome.min.css" rel="stylesheet">
     <link href="/css/solid.min.css" rel="stylesheet">
@@ -180,7 +181,25 @@
         </div>
         <div class='rows'>
           <div class='row'>
-            <a class='btn' href="${logout_url}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+            <% if (authorized) { %>
+              <a class='btn' href="${logout_url}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+            <% } else { %>
+              <div class='explain'>
+              <div class='warning'><i class="fa-solid fa-lock"></i> Create a login</div>
+              <div>If you are running Breadboard on the open web, anyone can access your breadboard (and even delete files).</div>
+              <br>
+              <div>To password-protect breadboard, create a login.</div>
+              <ol>
+                <li>Open <code><%=config%></code></li>
+                <li>Uncomment the <code>accounts</code> section and customize the username/password (You can add as many accounts as you want)</li>
+                <li>Restart the app</li>
+              </ol>
+              <div>For example if you want two accounts <code>admin</code> and <code>cocktailpeanut</code>, each with a password, it may look like this:</div>
+  <pre>accounts:
+  admin: password
+  cocktailpeanut: saltypassword</pre>
+              </div>
+            <% } %>
           </div>
         </div>
       <% } %>

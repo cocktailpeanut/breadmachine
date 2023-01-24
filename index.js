@@ -8,26 +8,31 @@ const Updater = require('./updater/index')
 const packagejson = require('./package.json')
 const BasicAuth = require('./basicauth')
 const IPC = require('./ipc')
-class Breadpress {
+class Breadmachine {
   async init(config) {
     this.config = config
+    let settings = await this.settings()
+    if (settings.accounts && Object.keys(settings.accounts).length > 0) {
+      this.basicauth = new BasicAuth(settings.accounts)
+    }
+    if (settings.port) {
+      this.port = parseInt(settings.port)
+    } else {
+      this.port = await new Promise((resolve, reject) => {
+        getport(function (e, p) {
+          if (e) throw e
+          resolve(p)
+        })
+      })
+    }
     this.VERSION = packagejson.version
     this.need_update = null
     this.default_sync_mode = "default"
     this.current_sorter_code = 0
-    this.port = await new Promise((resolve, reject) => {
-      getport(function (e, p) {
-        if (e) throw e
-        resolve(p)
-      })
-    })
     this.ipc = new IPC(this, config)
     await this.updateCheck().catch((e) => {
       console.log("update check error", e)
     })
-    let settings = await this.settings()
-    console.log("settings", settings)
-    this.basicauth = new BasicAuth(settings.accounts)
     this.start()
   }
   async settings() {
@@ -49,25 +54,10 @@ class Breadpress {
       req.agent = (/breadboard/.test(a) ? "electron" : "web")
       next()
     })
-
-//    app.get("/login", (req, res) => {
-//      res.render("login", {
-//        protocol: req.protocol,
-//        host: req.get("host"),
-//        agent: req.agent
-//      })
-//    })
-//    app.get("/basicauth", this.basicauth.auth.bind(this.basicauth), (req, res) => {
-//      console.log("authorized")
-//      console.log("res", res)
-//      res.render("basicauth", {
-//        agent: req.agent
-//      })
-//    })
-
     app.use(express.static(path.resolve(__dirname, 'public')))
-    //app.use(this.basicauth.auth_redirect.bind(this.basicauth))
-    app.use(this.basicauth.auth.bind(this.basicauth))
+    if (this.basicauth) {
+      app.use(this.basicauth.auth.bind(this.basicauth))
+    }
     app.use(express.json());
 
     app.set('view engine', 'ejs');
@@ -96,8 +86,11 @@ class Breadpress {
       next();
     }, this.ipc.sse.init);
     app.get("/settings", (req, res) => {
+      let authorized = (this.basicauth ? true : false)
       res.render("settings", {
+        authorized,
         agent: req.agent,
+        config: this.config.config,
         platform: process.platform,
         version: this.VERSION,
         query: req.query,
@@ -141,23 +134,24 @@ class Breadpress {
     this.app = app
   }
   async updateCheck () {
-    const releaseFeed = "https://github.com/cocktailpeanut/breadboard/releases.atom"
-    const releaseURL = "https://github.com/cocktailpeanut/breadboard/releases"
-    const updater = new Updater()
-    let res = await updater.check(releaseFeed)
-    console.log("Feed", res)
-    if (res.feed && res.feed.entry) {
-      let latest = (Array.isArray(res.feed.entry) ? res.feed.entry[0] : res.feed.entry)
-      if (latest.title === this.VERSION) {
-        console.log("UP TO DATE", latest.title, this.VERSION)
-      } else {
-        console.log("Need to update to", latest)
-        this.need_update = {
-          $url: releaseURL,
-          latest
+    if (this.config.releases) {
+      const releaseFeed = this.config.releases.feed
+      const releaseURL = this.config.releases.url
+      const updater = new Updater()
+      let res = await updater.check(releaseFeed)
+      if (res.feed && res.feed.entry) {
+        let latest = (Array.isArray(res.feed.entry) ? res.feed.entry[0] : res.feed.entry)
+        if (latest.title === this.VERSION) {
+          console.log("UP TO DATE", latest.title, this.VERSION)
+        } else {
+          console.log("Need to update to", latest.id, latest.updated, latest.title)
+          this.need_update = {
+            $url: releaseURL,
+            latest
+          }
         }
       }
     }
   }
 }
-module.exports = Breadpress
+module.exports = Breadmachine
