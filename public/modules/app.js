@@ -163,12 +163,15 @@ class App {
     if (this.sync_mode === "default" || this.sync_mode === "reindex" || this.sync_mode === "reindex_folder") {
       await this.synchronize()
     } else {
+      let height = `${window.innerHeight * 2}px`;
       this.observer = new IntersectionObserver(async entries => {
         let entry = entries[0]
         if (entry.intersectionRatio > 0) {
           this.offset = this.offset + 1
           await this.draw()
         }
+      }, {
+        rootMargin: height
       });
       this.offset = 0
       await this.draw()

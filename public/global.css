@@ -85,9 +85,6 @@ body.dark .empty-container {
   justify-content: center;
   outline: none;
 }
-.content:empty {
-  height: 1000px;
-}
 .card {
   width: var(--card-width);
   background: white;
@@ -267,6 +264,9 @@ body.dark .empty-container {
   -webkit-box-orient: vertical;
   overflow: hidden;
   display: none !important;
+}
+.card:not(.expanded) img {
+  min-height: var(--card-width);
 }
 .card img {
   width: 100%;
