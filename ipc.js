@@ -39,6 +39,9 @@ class IPC {
     this.ipc.handle("theme", (event, _theme) => {
       this.ipc.theme = _theme
     })
+    this.ipc.handle("style", (event, _style) => {
+      this.ipc.style = _style
+    })
     this.ipc.handle('sync', async (event, rpc) => {
       console.log("## sync from rpc", rpc)
       let filter

@@ -22,9 +22,14 @@ class App {
   }
   async init () {
     console.log("INIT", VERSION)
-    this.selector = new TomSelect("nav select", {
+    this.selector = new TomSelect("nav select#sorter", {
       onDropdownClose: () => {
         this.selector.blur()
+      }
+    })
+    this.style_selector = new TomSelect("nav select#styler", {
+      onDropdownClose: () => {
+        this.style_selector.blur()
       }
     })
     await this.init_db()
@@ -157,6 +162,7 @@ class App {
   }
   async bootstrap () {
     await this.init_theme()
+    await this.init_style()
     await this.init_zoom()
     await this.zoomer.init()
     this.init_worker()
@@ -249,6 +255,14 @@ class App {
     document.body.className = this.theme.val
     document.querySelector("html").className = this.theme.val
     this.api.theme(this.theme.val)
+  }
+  async init_style () {
+    this.style = await this.user.settings.where({ key: "style" }).first()
+    if (!this.style) this.style = { val: 1 }
+    document.body.setAttribute("data-style", this.style.val)
+    document.querySelector("html").setAttribute("data-style", this.style.val)
+    this.style_selector.setValue(this.style.val, true)
+    this.api.style(this.style.val)
   }
   init_worker () {
     if (!this.worker) {

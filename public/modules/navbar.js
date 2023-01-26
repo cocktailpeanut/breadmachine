@@ -79,7 +79,7 @@ class Navbar {
         }
       }
     })
-    document.querySelector("nav select").addEventListener("change", async (e) => {
+    document.querySelector("nav select#sorter").addEventListener("change", async (e) => {
       this.sorter_code = parseInt(e.target.value)
       this.app.sorter_code = this.sorter_code
       let query = document.querySelector(".search").value
@@ -88,6 +88,11 @@ class Navbar {
       } else {
         await this.app.search()
       }
+    })
+    document.querySelector("nav select#styler").addEventListener("change", async (e) => {
+      let style = e.target.value
+      await this.app.user.settings.put({ key: "style", val: style })
+      await this.app.init_style()
     })
     document.querySelector("#sync").addEventListener('click', async (e) => {
       await this.app.synchronize()

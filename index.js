@@ -77,7 +77,8 @@ class Breadmachine {
         sync_folder,
         need_update: this.need_update,
         current_sorter_code: this.current_sorter_code,
-        theme: this.ipc.theme
+        theme: this.ipc.theme,
+        style: this.ipc.style,
       })
       if (this.default_sync_mode) this.default_sync_mode = false   // disable sync after the first time at launch
     })
@@ -94,7 +95,8 @@ class Breadmachine {
         platform: process.platform,
         version: this.VERSION,
         query: req.query,
-        theme: this.ipc.theme
+        theme: this.ipc.theme,
+        style: this.ipc.style,
       })
     })
     app.get("/connect", (req, res) => {
@@ -104,7 +106,8 @@ class Breadmachine {
         platform: process.platform,
         version: this.VERSION,
         query: req.query,
-        theme: this.ipc.theme
+        theme: this.ipc.theme,
+        style: this.ipc.style,
       })
     })
     app.get("/favorites", (req, res) => {
@@ -112,7 +115,8 @@ class Breadmachine {
         agent: req.agent,
         platform: process.platform,
         version: this.VERSION,
-        theme: this.ipc.theme
+        theme: this.ipc.theme,
+        style: this.ipc.style,
       })
     })
     app.get('/file', (req, res) => {

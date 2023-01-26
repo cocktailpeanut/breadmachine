@@ -25,6 +25,9 @@ class API {
   theme (val) {
     return this.request("theme", val)
   }
+  style (val) {
+    return this.request("style", val)
+  }
 
 
   startDrag (fileNames) {

@@ -265,14 +265,31 @@ body.dark .empty-container {
   overflow: hidden;
   display: none !important;
 }
-.card:not(.expanded) img {
+body[data-style='1'] .card:not(.expanded) img {
   min-height: var(--card-width);
+  object-fit: cover;
+}
+body[data-style='2'] .card:not(.expanded) img {
+  min-height: var(--card-width);
+  object-fit: contain;
+}
+body[data-style='3'] .card:not(.expanded) img {
+  height: var(--card-width);
+  object-fit: contain;
+}
+body[data-style='4'] .card:not(.expanded) img {
+  height: var(--card-width);
+  object-fit: cover;
+}
+body[data-style='5'] .card:not(.expanded) img {
+  height: var(--card-width);
 }
 .card img {
   width: 100%;
   box-sizing: border-box;
   display: block;
   cursor: pointer;
+  object-position: top;
 }
 .card .col {
   padding: 10px;
@@ -457,6 +474,14 @@ nav button#favorite {
 
 .settings {
   font-size: var(--font-size);
+}
+.settings select {
+  width: 100%;
+  background: none;
+}
+.settings option {
+  padding: 10px;
+  box-sizing: border-box;
 }
 .settings .explain {
   padding: 20px;
@@ -958,6 +983,10 @@ body.dark footer button {
   color: cornflowerblue;
 }
 body.dark .settings .row {
+}
+body.dark .settings select {
+  color: white;
+  border: 1px solid rgba(255, 255,255,0.2);
 }
 body.dark .favorites .row a {
   color: rgba(255,255,255,0.9);
