@@ -20,8 +20,8 @@ class IPC {
       if (config.ipc) {
         this.ipc = config.ipc
       }
-      if (config.theme) this.theme = (config.theme ? config.theme : "default")
     }
+    this.theme = (config && config.theme ? config.theme : "default")
     this.config = config
     if (!this.ipc) {
       this.ipc = {
@@ -37,10 +37,10 @@ class IPC {
       this.sse.send(JSON.stringify(msg))
     }, 1)
     this.ipc.handle("theme", (event, _theme) => {
-      this.ipc.theme = _theme
+      this.theme = _theme
     })
     this.ipc.handle("style", (event, _style) => {
-      this.ipc.style = _style
+      this.style = _style
     })
     this.ipc.handle('sync', async (event, rpc) => {
       console.log("## sync from rpc", rpc)

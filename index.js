@@ -6,6 +6,7 @@ const fs = require('fs')
 const yaml = require('js-yaml');
 const Updater = require('./updater/index')
 const packagejson = require('./package.json')
+const app_packagejson = require(path.resolve(process.cwd(), "package.json"))
 const BasicAuth = require('./basicauth')
 const IPC = require('./ipc')
 class Breadmachine {
@@ -25,7 +26,9 @@ class Breadmachine {
         })
       })
     }
-    this.VERSION = packagejson.version
+    this.MACHINE_VERSION = packagejson.version
+    this.VERSION = app_packagejson.version
+    console.log("versions", { agent: this.VERSION, core: this.MACHINE_VERSION })
     this.need_update = null
     this.default_sync_mode = "default"
     this.current_sorter_code = 0
@@ -73,6 +76,7 @@ class Breadmachine {
         platform: process.platform,
         query: req.query,
         version: this.VERSION,
+        machine_version: this.MACHINE_VERSION,
         sync_mode,
         sync_folder,
         need_update: this.need_update,
@@ -94,9 +98,38 @@ class Breadmachine {
         config: this.config.config,
         platform: process.platform,
         version: this.VERSION,
+        machine_version: this.MACHINE_VERSION,
         query: req.query,
         theme: this.ipc.theme,
         style: this.ipc.style,
+      })
+    })
+    app.get("/help", (req, res) => {
+      let items = [{
+        name: "discord",
+        description: "ask questions and share feedback",
+        icon: "fa-brands fa-discord",
+        href: "https://discord.gg/6MJ6MQScnX"
+      }, {
+        name: "twitter",
+        description: "stay updated on Twitter",
+        icon: "fa-brands fa-twitter",
+        href: "https://twitter.com/cocktailpeanut"
+      }, {
+        name: "github",
+        description: "feature requests and bug report",
+        icon: "fa-brands fa-github",
+        href: "https://github.com/cocktailpeanut/breadboard/issues"
+      }]
+      res.render("help", {
+        agent: req.agent,
+        config: this.config.config,
+        theme: this.ipc.theme,
+        style: this.ipc.style,
+        items,
+        platform: process.platform,
+        machine_version: this.MACHINE_VERSION,
+        version: this.VERSION
       })
     })
     app.get("/connect", (req, res) => {
@@ -105,6 +138,7 @@ class Breadmachine {
         config: this.config.config,
         platform: process.platform,
         version: this.VERSION,
+        machine_version: this.MACHINE_VERSION,
         query: req.query,
         theme: this.ipc.theme,
         style: this.ipc.style,
@@ -115,6 +149,7 @@ class Breadmachine {
         agent: req.agent,
         platform: process.platform,
         version: this.VERSION,
+        machine_version: this.MACHINE_VERSION,
         theme: this.ipc.theme,
         style: this.ipc.style,
       })
