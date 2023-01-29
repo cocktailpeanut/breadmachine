@@ -26,17 +26,17 @@
   <body class="<%=theme%>" data-style="<%=style%>">
     <div id='bar'></div>
     <nav class="<%=platform%>">
-      <a class='btn' href="/" class='btn'><i class="fa-solid fa-house"></i></a>
-      <button id='prev'><i class="fa-solid fa-chevron-left"></i></button>
-      <button id='next'><i class="fa-solid fa-chevron-right"></i></button>
-      <a class='btn' href="/favorites"><i class="fa-solid fa-star"></i></a>
-      <a class='btn' href="/?query=tag:favorite"><i class="fa-solid fa-heart"></i></a>
+      <a title='home' class='btn' href="/" class='btn'><i class="fa-solid fa-house"></i></a>
+      <button title='back' id='prev'><i class="fa-solid fa-chevron-left"></i></button>
+      <button title='forward' id='next'><i class="fa-solid fa-chevron-right"></i></button>
+      <a title='bookmarked filters' class='btn' href="/favorites"><i class="fa-solid fa-star"></i></a>
+      <a title='liked items' class='btn' href="/?query=tag:favorite"><i class="fa-solid fa-heart"></i></a>
       <div class='status'></div>
       <input type='search' placeholder='search' class='search flexible'>
-      <a class='btn' target="_blank" href="https://discord.gg/6MJ6MQScnX"><i class="fa-brands fa-discord"></i></a>
-      <a class='btn' target="_blank" href="https://twitter.com/cocktailpeanut"><i class="fa-brands fa-twitter"></i></a>
-      <a class='btn' target="_blank" href="https://github.com/cocktailpeanut/breadboard/issues"><i class="fa-solid fa-clipboard-question"></i></a>
-      <a class='btn' href="/settings"><i class="fa-solid fa-gear"></i></a>
+      <a title='discord' class='btn' target="_blank" href="https://discord.gg/6MJ6MQScnX"><i class="fa-brands fa-discord"></i></a>
+      <a title='twitter' class='btn' target="_blank" href="https://twitter.com/cocktailpeanut"><i class="fa-brands fa-twitter"></i></a>
+      <a title='help' class='btn' href="/help"><i class="fa-solid fa-clipboard-question"></i></a>
+      <a title='settings' class='btn' href="/settings"><i class="fa-solid fa-gear"></i></a>
       <button id='notification' class= 'hidden'><i class="fa-solid fa-bell"></i></button>
     </nav>
     <div class='settings'></div>
@@ -47,7 +47,9 @@
     let db;
     let user;
     let backup;
+    const AGENT = "<%=agent%>"
     const VERSION = "<%=version%>"
+    const MACHINE_VERSION = "<%=machine_version%>"
     const api = new API()
     const init_db = async () => {
       // init data db
@@ -110,7 +112,8 @@
         <h2>Version</h2>
       </div>
       <div class='rows'>
-        <div class='row'>${VERSION}</div>
+        <div class='row'>AGENT: ${AGENT} ${VERSION}</div>
+        <div class='row'>CORE: breadmachine ${MACHINE_VERSION}</div>
       </div>
       <br><br>
       <div class='header'>
@@ -140,9 +143,9 @@
       <div class='rows'>
         <div class="card ds-selectable">
           <div class="grab" draggable="true">
-            <button class="gofullscreen"><i class="fa-solid fa-expand"></i></button>
-            <button class="open-file"><i class="fa-solid fa-up-right-from-square"></i></button>
             <button class="favorite-file"><i class="fa-regular fa-heart"></i></button>
+            <button class="gofullscreen"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></button>
+            <button class="open-file"><i class="fa-regular fa-folder-open"></i></button>
           </div>
 <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAQAAABecRxxAAAEmElEQVR42u3UMQEAAAzCsOHf9CQggERCj+aAWZEADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAwAAkAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADADoHnvSAgHwhtNTAAAAAElFTkSuQmCC">
         </div>

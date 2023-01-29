@@ -84,8 +84,8 @@ class Handler {
           // add 'favorite' tag
           let span = document.createElement("span")
           span.setAttribute("data-tag", "tag:favorite")
-          span.innerHTML = `<button data-tag="tag:favorite" class='tag-item'><i class="fa-solid fa-tag"></i> favorite</button>`
-          favoriteFileTarget.closest(".card").querySelector("tr[data-key=tags] td.attr-val").appendChild(span)
+          span.innerHTML = `<button data-value="tag:favorite" class='token tag-item'><i class="fa-solid fa-tag"></i> favorite</button>`
+          favoriteFileTarget.closest(".card").querySelector("tr[data-key=tags] td.attr-val .content-text").appendChild(span)
         }
         favoriteFileTarget.querySelector("i").className = favClass
 
@@ -99,7 +99,6 @@ class Handler {
       } else if (tokenTarget && e.target.closest(".card.expanded")) {
         let key = tokenTarget.closest("tr").getAttribute("data-key")
         let val = tokenTarget.getAttribute("data-value")
-
         let popup_items = []
         if (key === "file_path" || key === "model_name" || key === "agent") {
           if (val.split(" ").length > 1) {
@@ -151,8 +150,6 @@ class Handler {
         } else {
           this.app.navbar.input(key, val)
         }
-
-
       } else if (tokenPopupTarget) {
         let key = tokenPopupTarget.getAttribute("data-key")
         let val = tokenPopupTarget.getAttribute("data-value")
@@ -181,8 +178,8 @@ class Handler {
             clipboardTarget.querySelector("i").classList.remove("fa-check")
             clipboardTarget.querySelector("i").classList.add("fa-regular")
             clipboardTarget.querySelector("i").classList.add("fa-clone")
-            clipboardTarget.querySelector("span").innerHTML = "copy"
-          }, 1000)
+            clipboardTarget.querySelector("span").innerHTML = ""
+          }, 3000)
         }
       } else {
         let target = (e.target.classList.contains("card") ? e.target : e.target.closest(".card"))

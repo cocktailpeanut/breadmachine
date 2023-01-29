@@ -15,6 +15,7 @@ body {
   margin: 0;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 .flex {
   display: flex !important;
@@ -22,9 +23,7 @@ body {
 .container {
   flex-grow: 1;
   outline: none;
-  /*
-  padding-bottom: 300px;
-  */
+  overflow: auto;
 }
 .empty-container:empty {
   padding: 0;
@@ -85,22 +84,27 @@ body.dark .empty-container {
   justify-content: center;
   outline: none;
 }
+.card .row {
+  display: flex;
+  align-items: flex-start;
+}
 .card {
+  display: block; 
   width: var(--card-width);
   background: white;
   box-sizing: border-box;
   align-items: flex-start;
-  border-bottom: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid rgba(0,0,0,0.04);
 
   overflow-wrap: break-word;
   word-wrap: break-word;
   -ms-word-break: break-all;
   word-break: break-word;
 
-  -webkit-transition: width 0.2s ease-in-out, opacity 0.2s ease-in-out;
-  -moz-transition: width 0.2s ease-in-out, opacity 0.2s ease-in-out;
-  -o-transition: width 0.2s ease-in-out, opacity 0.2s ease-in-out;
-  transition: width 0.2s ease-in-out, opacity 0.2s ease-in-out;
+  -webkit-transition: width 0.1s ease-in-out, opacity 0.1s ease-in-out;
+  -moz-transition: width 0.1s ease-in-out, opacity 0.1s ease-in-out;
+  -o-transition: width 0.1s ease-in-out, opacity 0.1s ease-in-out;
+  transition: width 0.1s ease-in-out, opacity 0.1s ease-in-out;
 
   -webkit-user-select: none;
   -ms-user-select: none;
@@ -133,18 +137,7 @@ body.dark .empty-container {
 .card .grab {
   padding: 5px;
   box-sizing: border-box;
-  text-align: right;
   cursor: pointer;
-
-/*
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 10000;
-  display: none;
-  background: rgba(0,0,0,0.4);
-  */
 }
 .card:hover .grab {
   display: block;
@@ -181,18 +174,30 @@ body.dark .empty-container {
 }
 .card.expanded {
   width: 600px;
+  max-width: 30%;
   -webkit-user-select: auto;
   -ms-user-select: auto;
   user-select: auto;
 }
 .card.expanded td {
-  font-size: 1rem;
+  font-size: 0.8rem;
+  padding: 3px;
+}
+.card.expanded td.attr-val {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+.card.expanded td.attr-val .content-text {
+  padding: 0px 0;
 }
 .card.expanded h4, .card.fullscreen h4 {
   display: block;
-  font-size: 2.0rem;
+  font-size: 1.5rem;
+  line-height: 1.5rem;
   font-weight: bold;
-  padding: 10px 10px 20px;
+  padding: 0 0 10px;
+  letter-spacing: -2px;
 }
 .card.expanded header, .card.fullscreen header {
   padding: 10px 0;
@@ -208,10 +213,9 @@ body.dark .empty-container {
 .card table {
   display: none;
   width: 100%;
+  margin: 10px 0;
 }
 .card td {
-  border-top: 1px solid whitesmoke;
-  padding: 5px;
   box-sizing: border-box;
   font-size: 1rem;
   min-width: 100px;
@@ -229,9 +233,6 @@ body.dark .empty-container {
 .card td span.token {
   cursor: pointer;
   color: royalblue;
-  /*
-  text-decoration: underline;
-  */
 }
 .card td span.token.btn {
   background: black;
@@ -242,9 +243,6 @@ body.dark .empty-container {
   font-size: 0.8rem;
   margin: 0;
   font-family: Menlo, monaco, monospace;
-  /*
-  font-size: 12px;
-  */
 }
 .card h4 {
   padding: 0px 10px;
@@ -266,34 +264,43 @@ body.dark .empty-container {
   display: none !important;
 }
 body[data-style='1'] .card:not(.expanded) img {
-  min-height: var(--card-width);
-  object-fit: cover;
+  height: var(--card-width);
+  object-fit: contain;
+  width: 100%;
 }
 body[data-style='2'] .card:not(.expanded) img {
-  min-height: var(--card-width);
-  object-fit: contain;
+  height: var(--card-width);
+  object-fit: cover;
+  width: 100%;
 }
 body[data-style='3'] .card:not(.expanded) img {
   height: var(--card-width);
-  object-fit: contain;
+  width: 100%;
 }
 body[data-style='4'] .card:not(.expanded) img {
-  height: var(--card-width);
-  object-fit: cover;
+  min-height: var(--card-width);
+  object-fit: contain;
+  width: 100%;
 }
 body[data-style='5'] .card:not(.expanded) img {
-  height: var(--card-width);
+  min-height: var(--card-width);
+  object-fit: cover;
+  width: 100%;
+}
+.card.expanded img {
+  max-width: 40%;
 }
 .card img {
-  width: 100%;
+  width: auto;
   box-sizing: border-box;
   display: block;
   cursor: pointer;
   object-position: top;
 }
 .card .col {
-  padding: 10px;
+  padding: 0 10px;
   box-sizing: border-box;
+  flex-grow: 1;
 }
 .card:not(.expanded) .col {
   padding: 0;
@@ -332,11 +339,28 @@ td .attribute {
   width: 50px !important;
   text-align: right;
 }
-.card tr:hover button.copy-text, .card tr:hover button.edit-tags, .card tr:hover button.open-file {
-  visibility: visible;
+tr button.copy-text {
+  display: inline-block;
+  cursor: pointer;
+  font-size: 0.8rem;
+  z-index: 10000;
+  border: none;
+  padding: 0 2px;
+  z-index: 10;
+  border-radius: 4px;
+  margin-right: 4px;
+  background: none;
 }
-tr button.copy-text, tr button.edit-tags, tr button.open-file {
-  visibility: hidden;
+tr button.copy-text:hover {
+  color: firebrick !important;
+}
+.card tr:hover button.edit-tags, .card tr:hover button.open-file {
+  display: block;
+  z-index: 10000;
+  position: relative;
+}
+tr button.edit-tags, tr button.open-file {
+  display: none;
   border-radius: 4px; 
   margin: 2px;
   padding: 2px 5px;
@@ -345,6 +369,7 @@ tr button.copy-text, tr button.edit-tags, tr button.open-file {
 }
 [data-key=tags] [data-tag] {
   margin-bottom: 5px;
+  display: inline-block;
 }
 nav {
   padding: 5px 10px;
@@ -475,6 +500,12 @@ nav button#favorite {
 .settings {
   font-size: var(--font-size);
 }
+.settings .card {
+  margin-bottom: 10px;
+}
+.settings .card img {
+  height: var(--card-width);
+}
 .settings select {
   width: 100%;
   background: none;
@@ -532,9 +563,6 @@ nav button#favorite {
 }
 .settings main .row {
   padding: 10px;
-  /*
-  border-left: 2px solid rgba(0,0,0,0.1);
-  */
 }
 .help main .item {
   border-top: 1px solid rgba(0,0,0,0.05);
@@ -568,11 +596,6 @@ nav button#favorite {
   border: none;
 }
 .settings button, .settings .btn, .help main .header button, .favorites main button {
-/*
-  border: none;
-  background: black;
-  color: white;
-  */
   border-radius: 2px;
   cursor: pointer;
   padding: 5px 10px;
@@ -585,20 +608,23 @@ nav button#favorite {
   color: royalblue;
   background: none;
 }
+.settings .row button {
+  opacity: 0.7;
+}
 .favorites main .row {
   padding: 10px;
 }
 body.default .favorites .row {
-  border-top: 1px solid rgba(0,0,0,0.1);
+  border-top: 1px solid rgba(0,0,0,0.07);
 }
 body.default .favorites .row:last-child {
-  border-bottom: 1px solid rgba(0,0,0,0.1);
+  border-bottom: 1px solid rgba(0,0,0,0.07);
 }
 body.dark .favorites .row {
-  border-top: 1px solid rgba(255,255,255,0.1);
+  border-top: 1px solid rgba(255,255,255,0.03);
 }
 body.dark .favorites .row:last-child {
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255,255,255,0.03);
 }
 .favorites .global-filter {
   padding: 5px 10px;
@@ -609,14 +635,6 @@ body.dark .favorites .row:last-child {
   border-radius: 5px;
   font-weight: bold;
 }
-/*
-.settings button {
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  margin-right: 10px;
-}
-*/
 hr {
   height: 1px;
   border: none;
@@ -685,7 +703,6 @@ footer .tag-menu-items > div {
   margin-bottom: 10px;
 }
 .card-header {
-  padding: 5px;
   box-sizing: border-box;
 }
 .card-header button {
@@ -768,7 +785,6 @@ nav #notification {
   color: white !important;
   border: none !important;
 }
-
 
 
 body.default {
@@ -859,15 +875,24 @@ body.default .notification-popup a {
 body.default hr {
   background: rgba(0,0,0,0.1);
 }
+body.default .settings .row {
+  background: rgba(0,0,100,0.05);
+}
+/*
 body.default .settings .row:nth-child(odd) {
   background: rgba(0,0,100,0.05);
 }
+*/
 body.default .settings .center-faded {
   background: rgba(0,0,100,0.05);
 }
 body.default .settings a.link {
   color: black;
 }
+body.default tr button.copy-text {
+  color: black;
+}
+
 
 
 /*
@@ -940,23 +965,10 @@ body.dark .settings, body.dark .favorites, body.dark .help {
 body.dark main .item {
   color: white;
 }
-/*
-body.dark .settings .del {
-  color: red;
-}
-*/
 body.dark .settings button, body.dark .settings .btn, body.dark .favorites button, body.dark .favorites .btn {
-/*
-  background: white;
-  color: black;
-  */
   border: 2px solid cornflowerblue;
   color: cornflowerblue;
   background: none;
-  /*
-  background: black;
-  color: rgba(255,255,255,0.9);
-  */
 }
 
 body.dark nav button, body.dark nav .btn, body.dark nav select {
@@ -970,19 +982,18 @@ body.dark nav input {
 body.dark .card {
   background: rgba(255,255,255,0.05);
   color: rgba(255,255,255,0.8);
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-body.dark .card td {
-  border-top: 1px solid rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.02);
 }
 body.dark .card .token {
   color: cornflowerblue;
+  display: inline-block;
 }
 body.dark footer button {
   background: none;
   color: cornflowerblue;
 }
 body.dark .settings .row {
+  background: rgba(255,255,255,0.01);
 }
 body.dark .settings select {
   color: white;
@@ -1031,12 +1042,17 @@ body.dark .notification-popup a {
 body.dark hr {
   background: rgba(255,255,255,0.05);
 }
+/*
 body.dark .settings .row:nth-child(odd) {
   background: rgba(255,255,255,0.05);
 }
+*/
 body.dark .settings .center-faded {
   background: rgba(255,255,255,0.05);
 }
 body.dark .settings a.link {
+  color: white;
+}
+body.dark tr button.copy-text {
   color: white;
 }

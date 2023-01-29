@@ -2,8 +2,8 @@ const card = (meta, stripPunctuation) => {
   let attributes = Object.keys(meta).map((key) => {
     return { key, val: meta[key] }
   })
-  let times = `<tr><td>created</td><td>${timeago.format(meta.btime)}</td><td></td></tr>
-<tr><td>modified</td><td>${timeago.format(meta.mtime)}</td><td></td></tr>`
+  let times = `<tr><td>created</td><td>${timeago.format(meta.btime)}</td></tr>
+<tr><td>modified</td><td>${timeago.format(meta.mtime)}</td></tr>`
 
   let tags = []
   for(let attr of attributes) {
@@ -67,27 +67,40 @@ const card = (meta, stripPunctuation) => {
       el = attr.val
     }
 
-    return `<tr data-key="${attr.key}"><td>${attr.key}</td><td class='attr-val'>${el}</td><td class='copy-td'><button class='copy-text' data-value="${attr.val}"><i class="fa-regular fa-clone"></i> <span>copy</span></button></td></tr>`
+    let display = ""
+    if (attr.key === "tags") {
+      display = "hidden"
+    }
+
+    return `<tr data-key="${attr.key}">
+  <td>${attr.key}</td>
+  <td class='attr-val'>
+    <button title='copy to clipboard' class='copy-text ${display}' data-value="${attr.val}"><i class="fa-regular fa-clone"></i> <span></span></button>
+    <div class='content-text'>${el}</div>
+  </td>
+</tr>`
   }).join("")
 
 
   let favClass = (is_favorited ? "fa-solid fa-heart" : "fa-regular fa-heart")
 
   return `<div class='grab' draggable='true'>
-  <button class='gofullscreen'><i class="fa-solid fa-expand"></i></button>
-  <button data-src="${meta.file_path}" class='open-file'><i class="fa-solid fa-up-right-from-square"></i></button>
-  <button data-favorited="${is_favorited}" data-src="${meta.file_path}" class='favorite-file'><i class="${favClass}"></i></button>
-  </div>
-<img loading='lazy' data-root="${meta.root_path}" data-src="${meta.file_path}" src="/file?file=${encodeURIComponent(meta.file_path)}">
-<div class='col'>
-  <h4 class='flex'>${meta.prompt ? meta.prompt : ""}</h4>
-  <div class='xmp'>
-    <div class='card-header'>
-      <button class='copy-text' data-value="${meta.prompt}"><i class='fa-regular fa-clone'></i> <span>copy prompt</span></button>
-      <button class='view-xmp' data-src="${meta.file_path}"><i class="fa-solid fa-code"></i> View XML</button>
+<button title='like this item' data-favorited="${is_favorited}" data-src="${meta.file_path}" class='favorite-file'><i class="${favClass}"></i></button>
+<button title='get the source file' data-src="${meta.file_path}" class='open-file'><i class="fa-regular fa-folder-open"></i></button>
+<button title='view in full screen' class='gofullscreen'><i class="fa-solid fa-up-right-and-down-left-from-center"></i></button>
+</div>
+<div class='row'>
+  <img data-root="${meta.root_path}" data-src="${meta.file_path}" src="/file?file=${encodeURIComponent(meta.file_path)}">
+  <div class='col'>
+    <h4 class='flex'>${meta.prompt ? meta.prompt : ""}</h4>
+    <div class='xmp'>
+      <div class='card-header'>
+        <button title='copy the prompt to clipboard' class='copy-text' data-value="${meta.prompt}"><i class='fa-regular fa-clone'></i> <span>Copy Prompt</span></button>
+        <button title='view the metadata in standardized XML' class='view-xmp' data-src="${meta.file_path}"><i class="fa-solid fa-code"></i> View XML</button>
+      </div>
+      <textarea readonly class='hidden slot'></textarea>
     </div>
-    <textarea readonly class='hidden slot'></textarea>
+    <table>${times}${trs}</table>
   </div>
-  <table>${times}${trs}</table>
 </div>`
 }

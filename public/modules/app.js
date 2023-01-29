@@ -177,6 +177,7 @@ class App {
           await this.draw()
         }
       }, {
+        root: document.querySelector(".container"),
         rootMargin: height
       });
       this.offset = 0
@@ -270,21 +271,21 @@ class App {
       this.worker.onmessage = async (e) => {
         if (e.data.res.length > 0) {
           await this.fill(e.data)
-          setTimeout(() => {
-            document.querySelector("#sync").classList.remove("disabled")
-            document.querySelector("#sync").disabled = false
-            document.querySelector("#sync i").classList.remove("fa-spin")
-            this.selection.init()
-            this.zoomer.resized()
-          }, 0)
+          document.querySelector("#sync").classList.remove("disabled")
+          document.querySelector("#sync").disabled = false
+          document.querySelector("#sync i").classList.remove("fa-spin")
+          this.selection.init()
+          this.zoomer.resized()
         } else {
           // if this.query is null => we're on the home page
           // if homepage, and no result, tell people to connect some folders
-          if (!this.query) {
-            document.querySelector(".empty-container").innerHTML = `Connect a folder to get started.<br><br>
-<a href="/connect" class='btn'><i class="fa-solid fa-plug"></i> Connect</a>`
+          if (this.offset === 0) {
+            if (!this.query) {
+              document.querySelector(".empty-container").innerHTML = `Connect a folder to get started.<br><br>
+  <a href="/connect" class='btn'><i class="fa-solid fa-plug"></i> Connect</a>`
+            }
           }
-          document.querySelector(".end-marker .caption i").classList.remove("fa-spin")
+          document.querySelector(".end-marker .caption i").classList.remove("fa-bounce")
         }
       }
     }
@@ -375,6 +376,26 @@ class App {
       }
     }
   }
+//  outerWidthMargin(el) {
+//    var width = el.offsetWidth;
+//    var style = getComputedStyle(el);
+//    width += parseInt(style.marginLeft) + parseInt(style.marginRight);
+//    return width;
+//  }
+//  width (el) {
+//    return parseFloat(getComputedStyle(el, null).width.replace("px", ""))
+//  }
+//  height () {
+//    const el = document.querySelector(".card:first-child")
+//    let h = parseFloat(getComputedStyle(el, null).height.replace("px", ""))
+//    let rows = this.rows() 
+//    return h / rows
+//  }
+//  rows () {
+//    const container = document.querySelector(".content")
+//    const card = document.querySelector(".card:first-child")
+//    return Math.floor(this.width(container) / this.outerWidthMargin(card));
+//  }
   async fill ({ count, res }) {
     let items = res
     document.querySelector(".content-info").innerHTML = `<i class="fa-solid fa-check"></i> ${count}`
@@ -384,14 +405,19 @@ class App {
     })
     if (!this.clusterize) {
       this.clusterize = new Clusterize({
-  //      rows: data,
         scrollElem: document.querySelector(".container"),
         contentElem: document.querySelector(".content"),
-        rows_in_block: 500,
-        blocks_in_cluster: 10
+        keep_parity: false,
+        //blocks_in_cluster: 3
+        callbacks: {
+          clusterChanged: () => {
+            this.selection.init()
+          }
+        }
       });
     }
     this.clusterize.append(data)
+    this.clusterize.refresh(true)
     document.querySelector(".status").innerHTML = ""
     // start observing
     this.observer.unobserve(document.querySelector(".end-marker"));

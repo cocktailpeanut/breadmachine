@@ -231,15 +231,20 @@ class Selection {
     })
   }
   init () {
-    if (this.ds) this.ds.stop()
-//    if (!this.ds) {
+    //if (this.ds) this.ds.stop()
+    if (this.ds) {
+      this.ds.setSettings({
+        selectables: document.querySelectorAll('.card'),
+        area: document.querySelector(".content"),
+        draggability: false,
+      })
+    } else {
       this.ds = new DragSelect({
         selectables: document.querySelectorAll('.card'),
         area: document.querySelector(".content"),
         draggability: false,
       });
       this.ds.subscribe('callback', async (e) => {
-        console.log("callback", e)
         if (e.items && e.items.length > 0) {
           // reset tags
           this.update(e.items)
@@ -248,9 +253,9 @@ class Selection {
           document.querySelector("footer").classList.add("hidden")
         }
       });
-      this.ds.subscribe("dragstart", async (e) => {
-      })
-//    }
+//      this.ds.subscribe("dragstart", async (e) => {
+//      })
+    }
   }
   async del() {
     let selected = this.els.map((el) => {

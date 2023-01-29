@@ -1,17 +1,352 @@
-/* Clusterize.js - v0.19.0 - 2021-12-19
+/* Clusterize.js - v1.0.0 - 2023-01-22
  http://NeXTs.github.com/Clusterize.js/
- Copyright (c) 2015 Denis Lukov; Licensed GPLv3 */
+ Copyright (c) 2015 Denis Lukov; Licensed MIT */
 
-;(function(p,m){"undefined"!=typeof module?module.exports=m():"function"==typeof define&&"object"==typeof define.amd?define(m):this[p]=m()})("Clusterize",function(){function p(b,a,c){return a.addEventListener?a.addEventListener(b,c,!1):a.attachEvent("on"+b,c)}function m(b,a,c){return a.removeEventListener?a.removeEventListener(b,c,!1):a.detachEvent("on"+b,c)}function t(b){return"[object Array]"===Object.prototype.toString.call(b)}function q(b,a){return window.getComputedStyle?window.getComputedStyle(a)[b]:
-a.currentStyle[b]}var r=function(){for(var b=3,a=document.createElement("b"),c=a.all||[];a.innerHTML="\x3c!--[if gt IE "+ ++b+"]><i><![endif]--\x3e",c[0];);return 4<b?b:document.documentMode}(),C=navigator.platform.toLowerCase().indexOf("mac")+1,n=function(b){if(!(this instanceof n))return new n(b);var a=this,c={rows_in_block:50,blocks_in_cluster:4,tag:null,show_no_data_row:!0,no_data_class:"clusterize-no-data",no_data_text:"No data",keep_parity:!0,callbacks:{}};a.options={};for(var d="rows_in_block blocks_in_cluster show_no_data_row no_data_class no_data_text keep_parity tag callbacks".split(" "),
-h=0,g;g=d[h];h++)a.options[g]="undefined"!=typeof b[g]&&null!=b[g]?b[g]:c[g];c=["scroll","content"];for(h=0;d=c[h];h++)if(a[d+"_elem"]=b[d+"Id"]?document.getElementById(b[d+"Id"]):b[d+"Elem"],!a[d+"_elem"])throw Error("Error! Could not find "+d+" element");a.content_elem.hasAttribute("tabindex")||a.content_elem.setAttribute("tabindex",0);var e=t(b.rows)?b.rows:a.fetchMarkup(),k={};b=a.scroll_elem.scrollTop;a.insertToDOM(e,k);a.scroll_elem.scrollTop=b;var l=!1,w=0,u=!1,x=function(){C&&(u||(a.content_elem.style.pointerEvents=
-"none"),u=!0,clearTimeout(w),w=setTimeout(function(){a.content_elem.style.pointerEvents="auto";u=!1},50));l!=(l=a.getClusterNum(e))&&a.insertToDOM(e,k);a.options.callbacks.scrollingProgress&&a.options.callbacks.scrollingProgress(a.getScrollProgress())},y=0,z=function(){clearTimeout(y);y=setTimeout(a.refresh,100)};p("scroll",a.scroll_elem,x);p("resize",window,z);a.destroy=function(f){m("scroll",a.scroll_elem,x);m("resize",window,z);a.html((f?a.generateEmptyRow():e).join(""))};a.refresh=function(f){(a.getRowsHeight(e)||
-f)&&a.update(e)};a.update=function(f){e=t(f)?f:[];f=a.scroll_elem.scrollTop;e.length*a.options.item_height<f&&(l=a.scroll_elem.scrollTop=0);a.insertToDOM(e,k);a.scroll_elem.scrollTop=f};a.clear=function(){a.update([])};a.getRowsAmount=function(){return e.length};a.getScrollProgress=function(){return this.options.scroll_top/(e.length*this.options.item_height)*100||0};var B=function(f,A){var v=t(A)?A:[];v.length&&(e="append"==f?e.concat(v):v.concat(e),a.insertToDOM(e,k))};a.append=function(f){B("append",
-f)};a.prepend=function(f){B("prepend",f)}};n.prototype={constructor:n,fetchMarkup:function(){for(var b=[],a=this.getChildNodes(this.content_elem);a.length;)b.push(a.shift().outerHTML);return b},exploreEnvironment:function(b,a){var c=this.options;c.content_tag=this.content_elem.tagName.toLowerCase();b.length&&(r&&9>=r&&!c.tag&&(c.tag=b[0].match(/<([^>\s/]*)/)[1].toLowerCase()),1>=this.content_elem.children.length&&(a.data=this.html(b[0]+b[0]+b[0])),c.tag||(c.tag=this.content_elem.children[0].tagName.toLowerCase()),
-this.getRowsHeight(b))},getRowsHeight:function(b){var a=this.options,c=a.item_height;a.cluster_height=0;if(b.length&&(b=this.content_elem.children,b.length)){var d=b[Math.floor(b.length/2)];a.item_height=d.offsetHeight;"tr"==a.tag&&"collapse"!=q("borderCollapse",this.content_elem)&&(a.item_height+=parseInt(q("borderSpacing",this.content_elem),10)||0);"tr"!=a.tag&&(b=parseInt(q("marginTop",d),10)||0,d=parseInt(q("marginBottom",d),10)||0,a.item_height+=Math.max(b,d));a.block_height=a.item_height*a.rows_in_block;
-a.rows_in_cluster=a.blocks_in_cluster*a.rows_in_block;a.cluster_height=a.blocks_in_cluster*a.block_height;return c!=a.item_height}},getClusterNum:function(b){var a=this.options;a.scroll_top=this.scroll_elem.scrollTop;var c=a.cluster_height-a.block_height;return Math.min(Math.floor(a.scroll_top/c),Math.floor(b.length*a.item_height/c))},generateEmptyRow:function(){var b=this.options;if(!b.tag||!b.show_no_data_row)return[];var a=document.createElement(b.tag),c=document.createTextNode(b.no_data_text);
-a.className=b.no_data_class;if("tr"==b.tag){var d=document.createElement("td");d.colSpan=100;d.appendChild(c)}a.appendChild(d||c);return[a.outerHTML]},generate:function(b){var a=this.options,c=b.length;if(c<a.rows_in_block)return{top_offset:0,bottom_offset:0,rows_above:0,rows:c?b:this.generateEmptyRow()};var d=Math.max((a.rows_in_cluster-a.rows_in_block)*this.getClusterNum(b),0),h=d+a.rows_in_cluster,g=Math.max(d*a.item_height,0);a=Math.max((c-h)*a.item_height,0);c=[];var e=d;for(1>g&&e++;d<h;d++)b[d]&&
-c.push(b[d]);return{top_offset:g,bottom_offset:a,rows_above:e,rows:c}},renderExtraTag:function(b,a){var c=document.createElement(this.options.tag);c.className=["clusterize-extra-row","clusterize-"+b].join(" ");a&&(c.style.height=a+"px");return c.outerHTML},insertToDOM:function(b,a){this.options.cluster_height||this.exploreEnvironment(b,a);var c=this.generate(b),d=c.rows.join(""),h=this.checkChanges("data",d,a),g=this.checkChanges("top",c.top_offset,a),e=this.checkChanges("bottom",c.bottom_offset,
-a),k=this.options.callbacks,l=[];h||g?(c.top_offset&&(this.options.keep_parity&&l.push(this.renderExtraTag("keep-parity")),l.push(this.renderExtraTag("top-space",c.top_offset))),l.push(d),c.bottom_offset&&l.push(this.renderExtraTag("bottom-space",c.bottom_offset)),k.clusterWillChange&&k.clusterWillChange(),this.html(l.join("")),"ol"==this.options.content_tag&&this.content_elem.setAttribute("start",c.rows_above),this.content_elem.style["counter-increment"]="clusterize-counter "+(c.rows_above-1),k.clusterChanged&&
-k.clusterChanged()):e&&(this.content_elem.lastChild.style.height=c.bottom_offset+"px")},html:function(b){var a=this.content_elem;if(r&&9>=r&&"tr"==this.options.tag){var c=document.createElement("div");for(c.innerHTML="<table><tbody>"+b+"</tbody></table>";b=a.lastChild;)a.removeChild(b);for(c=this.getChildNodes(c.firstChild.firstChild);c.length;)a.appendChild(c.shift())}else a.innerHTML=b},getChildNodes:function(b){b=b.children;for(var a=[],c=0,d=b.length;c<d;c++)a.push(b[c]);return a},checkChanges:function(b,
-a,c){var d=a!=c[b];c[b]=a;return d}};return n});
+;(function(name, definition) {
+    if (typeof module != 'undefined') module.exports = definition();
+    else if (typeof define == 'function' && typeof define.amd == 'object') define(definition);
+    else this[name] = definition();
+}('Clusterize', function() {
+  "use strict"
+
+  // detect ie9 and lower
+  // https://gist.github.com/padolsey/527683#comment-786682
+  var ie = (function(){
+    for( var v = 3,
+             el = document.createElement('b'),
+             all = el.all || [];
+         el.innerHTML = '<!--[if gt IE ' + (++v) + ']><i><![endif]-->',
+         all[0];
+       ){}
+    return v > 4 ? v : document.documentMode;
+  }()),
+  is_mac = navigator.platform.toLowerCase().indexOf('mac') + 1;
+  var Clusterize = function(data) {
+    if( ! (this instanceof Clusterize))
+      return new Clusterize(data);
+    var self = this;
+
+    var defaults = {
+      rows_in_block: 50,
+      blocks_in_cluster: 4,
+      tag: null,
+      show_no_data_row: true,
+      no_data_class: 'clusterize-no-data',
+      no_data_text: 'No data',
+      keep_parity: true,
+      items_per_row: 1,
+      callbacks: {}
+    }
+
+    // public parameters
+    self.options = {};
+    var options = ['rows_in_block', 'blocks_in_cluster', 'show_no_data_row', 'no_data_class', 'no_data_text', 'keep_parity', 'tag', 'callbacks', 'items_per_row'];
+    for(var i = 0, option; option = options[i]; i++) {
+      self.options[option] = typeof data[option] != 'undefined' && data[option] != null
+        ? data[option]
+        : defaults[option];
+    }
+
+    var elems = ['scroll', 'content'];
+    for(var i = 0, elem; elem = elems[i]; i++) {
+      self[elem + '_elem'] = data[elem + 'Id']
+        ? document.getElementById(data[elem + 'Id'])
+        : data[elem + 'Elem'];
+      if( ! self[elem + '_elem'])
+        throw new Error("Error! Could not find " + elem + " element");
+    }
+
+    // tabindex forces the browser to keep focus on the scrolling list, fixes #11
+    if( ! self.content_elem.hasAttribute('tabindex'))
+      self.content_elem.setAttribute('tabindex', 0);
+
+    // private parameters
+    var rows = isArray(data.rows)
+        ? data.rows
+        : self.fetchMarkup(),
+      cache = {},
+      scroll_top = self.scroll_elem.scrollTop;
+
+    // append initial data
+    self.insertToDOM(rows, cache);
+
+    // restore the scroll position
+    self.scroll_elem.scrollTop = scroll_top;
+
+    // adding scroll handler
+    var last_cluster = false,
+    scroll_debounce = 0,
+    pointer_events_set = false,
+    scrollEv = function() {
+      // fixes scrolling issue on Mac #3
+      if (is_mac) {
+          if( ! pointer_events_set) self.content_elem.style.pointerEvents = 'none';
+          pointer_events_set = true;
+          clearTimeout(scroll_debounce);
+          scroll_debounce = setTimeout(function () {
+              self.content_elem.style.pointerEvents = 'auto';
+              pointer_events_set = false;
+          }, 50);
+      }
+      if (last_cluster != (last_cluster = self.getClusterNum(rows)))
+        self.insertToDOM(rows, cache);
+      if (self.options.callbacks.scrollingProgress)
+        self.options.callbacks.scrollingProgress(self.getScrollProgress());
+    },
+    resize_debounce = 0,
+    resizeEv = function() {
+      clearTimeout(resize_debounce);
+      resize_debounce = setTimeout(self.refresh, 100);
+    }
+    on('scroll', self.scroll_elem, scrollEv);
+    on('resize', window, resizeEv);
+
+    // public methods
+    self.destroy = function(clean) {
+      off('scroll', self.scroll_elem, scrollEv);
+      off('resize', window, resizeEv);
+      self.html((clean ? self.generateEmptyRow() : rows).join(''));
+    }
+    self.refresh = function(force) {
+      if(self.getRowsHeight(rows) || force) self.update(rows, force);
+    }
+    self.update = function(new_rows, force) {
+      // get the number of items in a row
+      // set self.row_items_count
+      var nodes = self.content_elem.children;
+      if(!nodes.length) return;
+      var node = nodes[Math.floor(nodes.length / 2)];
+      var prev_item_height = self.options.item_height
+      var content_elem_width = parseFloat(getStyle("width", self.content_elem).replace("px", ""))
+      var content_elem_height = parseFloat(getStyle("height", self.content_elem).replace("px", ""))
+      var scroll_elem_width = parseFloat(getStyle("width", self.scroll_elem).replace("px", ""))
+      var scroll_elem_height = parseFloat(getStyle("height", self.scroll_elem).replace("px", ""))
+      var prev_item_width = parseFloat(getStyle("width", node).replace("px", ""))
+      self.options.items_per_row = Math.floor(scroll_elem_width / prev_item_width)
+
+      var items_per_column = Math.ceil(scroll_elem_height / self.options.item_height)
+      self.options.rows_in_block = (items_per_column) * (self.options.items_per_row)
+
+      rows = isArray(new_rows)
+        ? new_rows
+        : [];
+      var scroll_top = self.scroll_elem.scrollTop;
+      // fixes #39
+      if(rows.length < scroll_top) {
+        self.scroll_elem.scrollTop = 0;
+        last_cluster = 0;
+      }
+      self.insertToDOM(rows, cache, force);
+      self.scroll_elem.scrollTop = scroll_top;
+    }
+    self.clear = function() {
+      self.update([]);
+    }
+    self.getRowsAmount = function() {
+      return rows.length;
+    }
+    self.getScrollProgress = function() {
+      return this.options.scroll_top / (rows.length * this.options.item_height) * 100 || 0;
+    }
+
+    var add = function(where, _new_rows) {
+      var new_rows = isArray(_new_rows)
+        ? _new_rows
+        : [];
+      if( ! new_rows.length) return;
+      rows = where == 'append'
+        ? rows.concat(new_rows)
+        : new_rows.concat(rows);
+      self.insertToDOM(rows, cache);
+    }
+    self.append = function(rows) {
+      add('append', rows);
+    }
+    self.prepend = function(rows) {
+      add('prepend', rows);
+    }
+  }
+
+  Clusterize.prototype = {
+    constructor: Clusterize,
+    // fetch existing markup
+    fetchMarkup: function() {
+      var rows = [], rows_nodes = this.getChildNodes(this.content_elem);
+      while (rows_nodes.length) {
+        rows.push(rows_nodes.shift().outerHTML);
+      }
+      return rows;
+    },
+    // get tag name, content tag name, tag height, calc cluster height
+    exploreEnvironment: function(rows, cache) {
+      var opts = this.options;
+      opts.content_tag = this.content_elem.tagName.toLowerCase();
+      if( ! rows.length) return;
+      if(ie && ie <= 9 && ! opts.tag) opts.tag = rows[0].match(/<([^>\s/]*)/)[1].toLowerCase();
+      if(this.content_elem.children.length <= 1) cache.data = this.html(rows[0] + rows[0] + rows[0]);
+      if( ! opts.tag) opts.tag = this.content_elem.children[0].tagName.toLowerCase();
+      this.getRowsHeight(rows);
+    },
+    getRowsHeight: function(rows) {
+      var opts = this.options,
+        prev_item_height = opts.item_height;
+      opts.cluster_height = 0;
+      if( ! rows.length) return;
+      var nodes = this.content_elem.children;
+      if( ! nodes.length) return;
+      var node = nodes[Math.floor(nodes.length / 2)];
+      opts.item_height = node.offsetHeight;
+      // consider table's border-spacing
+      if(opts.tag == 'tr' && getStyle('borderCollapse', this.content_elem) != 'collapse')
+        opts.item_height += parseInt(getStyle('borderSpacing', this.content_elem), 10) || 0;
+      // consider margins (and margins collapsing)
+      if(opts.tag != 'tr') {
+        var marginTop = parseInt(getStyle('marginTop', node), 10) || 0;
+        var marginBottom = parseInt(getStyle('marginBottom', node), 10) || 0;
+        opts.item_height += Math.max(marginTop, marginBottom);
+      }
+      opts.block_height = opts.item_height * opts.rows_in_block;
+      opts.rows_in_cluster = opts.blocks_in_cluster * opts.rows_in_block;
+      opts.cluster_height = opts.blocks_in_cluster * opts.block_height;
+      return prev_item_height != opts.item_height;
+    },
+    // get current cluster number
+    getClusterNum: function (rows) {
+      var opts = this.options;
+      opts.scroll_top = this.scroll_elem.scrollTop;
+      var cluster_divider = opts.cluster_height - opts.block_height;
+      var current_cluster = Math.floor(opts.scroll_top * opts.items_per_row / cluster_divider);
+      var max_cluster = Math.floor((rows.length * opts.item_height) / cluster_divider);
+      return Math.min(current_cluster, max_cluster);
+    },
+    // generate empty row if no data provided
+    generateEmptyRow: function() {
+      var opts = this.options;
+      if( ! opts.tag || ! opts.show_no_data_row) return [];
+      var empty_row = document.createElement(opts.tag),
+        no_data_content = document.createTextNode(opts.no_data_text), td;
+      empty_row.className = opts.no_data_class;
+      if(opts.tag == 'tr') {
+        td = document.createElement('td');
+        // fixes #53
+        td.colSpan = 100;
+        td.appendChild(no_data_content);
+      }
+      empty_row.appendChild(td || no_data_content);
+      return [empty_row.outerHTML];
+    },
+    // generate cluster for current scroll position
+    generate: function (rows) {
+      var opts = this.options,
+        rows_len = rows.length;
+      if (rows_len < opts.rows_in_block) {
+        return {
+          top_offset: 0,
+          bottom_offset: 0,
+          rows_above: 0,
+          rows: rows_len ? rows : this.generateEmptyRow()
+        }
+      }
+      var items_start = Math.max((opts.rows_in_cluster - opts.rows_in_block) * this.getClusterNum(rows), 0),
+        items_end = items_start + opts.rows_in_cluster,
+        top_offset = Math.max(items_start * opts.item_height, 0),
+        bottom_offset = Math.max((rows_len - items_end) * opts.item_height, 0),
+        this_cluster_rows = [],
+        rows_above = items_start;
+      if(top_offset < 1) {
+        rows_above++;
+      }
+      for (var i = items_start; i < items_end; i++) {
+        rows[i] && this_cluster_rows.push(rows[i]);
+      }
+      return {
+        top_offset: top_offset,
+        bottom_offset: bottom_offset,
+        rows_above: rows_above,
+        rows: this_cluster_rows
+      }
+    },
+    renderExtraTag: function(class_name, height) {
+      var tag = document.createElement(this.options.tag),
+        clusterize_prefix = 'clusterize-';
+      tag.className = [clusterize_prefix + 'extra-row', clusterize_prefix + class_name].join(' ');
+      height && (tag.style.height = height / this.options.items_per_row + 'px');
+      return tag.outerHTML;
+    },
+    // if necessary verify data changed and insert to DOM
+    insertToDOM: function(rows, cache, force) {
+      // explore row's height
+      if( ! this.options.cluster_height) {
+        this.exploreEnvironment(rows, cache);
+      }
+      var data = this.generate(rows),
+        this_cluster_rows = data.rows.join(''),
+        this_cluster_content_changed = this.checkChanges('data', this_cluster_rows, cache),
+        top_offset_changed = this.checkChanges('top', data.top_offset, cache),
+        only_bottom_offset_changed = this.checkChanges('bottom', data.bottom_offset, cache),
+        callbacks = this.options.callbacks,
+        layout = [];
+
+      if(force || this_cluster_content_changed || top_offset_changed) {
+        if(data.top_offset) {
+          this.options.keep_parity && layout.push(this.renderExtraTag('keep-parity'));
+          layout.push(this.renderExtraTag('top-space', data.top_offset));
+        }
+        layout.push(this_cluster_rows);
+        data.bottom_offset && layout.push(this.renderExtraTag('bottom-space', data.bottom_offset));
+        callbacks.clusterWillChange && callbacks.clusterWillChange();
+        this.html(layout.join(''));
+        this.options.content_tag == 'ol' && this.content_elem.setAttribute('start', data.rows_above);
+        this.content_elem.style['counter-increment'] = 'clusterize-counter ' + (data.rows_above-1);
+        callbacks.clusterChanged && callbacks.clusterChanged();
+      } else if(only_bottom_offset_changed) {
+        this.content_elem.lastChild.style.height = data.bottom_offset + 'px';
+      }
+    },
+    // unfortunately ie <= 9 does not allow to use innerHTML for table elements, so make a workaround
+    html: function(data) {
+      var content_elem = this.content_elem;
+      if(ie && ie <= 9 && this.options.tag == 'tr') {
+        var div = document.createElement('div'), last;
+        div.innerHTML = '<table><tbody>' + data + '</tbody></table>';
+        while((last = content_elem.lastChild)) {
+          content_elem.removeChild(last);
+        }
+        var rows_nodes = this.getChildNodes(div.firstChild.firstChild);
+        while (rows_nodes.length) {
+          content_elem.appendChild(rows_nodes.shift());
+        }
+      } else {
+        content_elem.innerHTML = data;
+      }
+    },
+    getChildNodes: function(tag) {
+        var child_nodes = tag.children, nodes = [];
+        for (var i = 0, ii = child_nodes.length; i < ii; i++) {
+            nodes.push(child_nodes[i]);
+        }
+        return nodes;
+    },
+    checkChanges: function(type, value, cache) {
+      var changed = value != cache[type];
+      cache[type] = value;
+      return changed;
+    }
+  }
+
+  // support functions
+  function on(evt, element, fnc) {
+    return element.addEventListener ? element.addEventListener(evt, fnc, false) : element.attachEvent("on" + evt, fnc);
+  }
+  function off(evt, element, fnc) {
+    return element.removeEventListener ? element.removeEventListener(evt, fnc, false) : element.detachEvent("on" + evt, fnc);
+  }
+  function isArray(arr) {
+    return Object.prototype.toString.call(arr) === '[object Array]';
+  }
+  function getStyle(prop, elem) {
+    return window.getComputedStyle ? window.getComputedStyle(elem)[prop] : elem.currentStyle[prop];
+  }
+
+  return Clusterize;
+}));
