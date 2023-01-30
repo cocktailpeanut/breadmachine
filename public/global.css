@@ -660,9 +660,12 @@ footer {
   display: flex;
   border-top: 1px solid rgba(0,0,0,0.1);
   box-sizing: border-box;
-  z-index: 10000000000;
+  z-index: 10000000;
   padding: 0 10px;
   align-items: flex-end;
+}
+.viewer-container {
+  z-index: 10000001 !important;
 }
 footer.empty button {
   visibility: hidden;
