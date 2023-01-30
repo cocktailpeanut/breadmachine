@@ -1,0 +1,7 @@
+port: 4200
+folders:
+  - ~/invokeai/outputs
+  - ~/.diffusionbee/images
+#accounts:
+#  admin: password
+#  user: userpassword

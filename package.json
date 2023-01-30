@@ -6,6 +6,9 @@
   "main": "index.js",
   "author": "https://twitter.com/cocktailpeanut",
   "license": "MIT",
+  "scripts": {
+    "dev": "node dev/index"
+  },
   "dependencies": {
     "axios": "^1.2.2",
     "basic-auth": "^2.0.1",
