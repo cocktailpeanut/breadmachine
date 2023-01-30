@@ -21,13 +21,13 @@ class Zoomer {
       this.cardwidth = this.defaultwidth
       this.fontsize = 0.8
     }
-    // need to subtract 15 because we're using custom scrollbar with width 15
+    // need to subtract 5 because we're using custom scrollbar with width 15
     // (to deal with a chromium bug)
-    let width = document.body.clientWidth - 15;
+    let width = document.body.clientWidth - 10;
     let leftover = width % this.cardwidth;
     let count = Math.floor(width / this.cardwidth)
     let new_cardwidth
-    let i = 0;
+    let i = 1;
     while(true) {
       //new_cardwidth = this.cardwidth + Math.floor(leftover / count) - i
       new_cardwidth = this.cardwidth + (leftover / count) - i

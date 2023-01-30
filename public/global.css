@@ -94,7 +94,9 @@ body.dark .empty-container {
   background: white;
   box-sizing: border-box;
   align-items: flex-start;
+  /*
   border: 1px solid rgba(0,0,0,0.04);
+  */
 
   overflow-wrap: break-word;
   word-wrap: break-word;
@@ -841,15 +843,18 @@ body.default nav button:hover {
   background: rgba(0,0,0,0.04);
   border-radius: 50px;
 }
-body.default::-webkit-scrollbar {
-  width: 15px;
+body.default .container::-webkit-scrollbar {
+  width: 10px;
 }
-body.default::-webkit-scrollbar-track {
+body.default .container::-webkit-scrollbar-track {
+/*
   background: white;
+  */
 }
-body.default::-webkit-scrollbar-thumb {
+body.default .container::-webkit-scrollbar-thumb {
   background-clip: content-box;
-  background: black;
+  background: rgba(0,0,0,0.9);
+  border-radius: 10px;
 }
 body.default select {
   background: white;
@@ -985,7 +990,9 @@ body.dark nav input {
 body.dark .card {
   background: rgba(255,255,255,0.05);
   color: rgba(255,255,255,0.8);
+  /*
   border: 1px solid rgba(255,255,255,0.02);
+  */
 }
 body.dark .card .token {
   color: cornflowerblue;
@@ -1014,15 +1021,18 @@ body.dark nav button:hover {
   border-radius: 50px;
 }
 
-body.dark::-webkit-scrollbar {
-  width: 15px;
+body.dark .container::-webkit-scrollbar {
+  width: 10px;
 }
-body.dark::-webkit-scrollbar-track {
+body.dark .container::-webkit-scrollbar-track {
+/*
   background: #111;
+  */
 }
-body.dark::-webkit-scrollbar-thumb {
+body.dark .container::-webkit-scrollbar-thumb {
   background-clip: content-box;
   background: rgba(255,255,255,0.9);
+  border-radius: 10px;
 }
 body.dark .card h4 {
   color: rgba(255,255,255,0.9);
