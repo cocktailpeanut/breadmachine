@@ -6,7 +6,6 @@ const fs = require('fs')
 const yaml = require('js-yaml');
 const Updater = require('./updater/index')
 const packagejson = require('./package.json')
-const app_packagejson = require(path.resolve(process.cwd(), "package.json"))
 const BasicAuth = require('./basicauth')
 const IPC = require('./ipc')
 class Breadmachine {
@@ -27,7 +26,7 @@ class Breadmachine {
       })
     }
     this.MACHINE_VERSION = packagejson.version
-    this.VERSION = app_packagejson.version
+    this.VERSION = config.version ? config.version : ""
     console.log("versions", { agent: this.VERSION, core: this.MACHINE_VERSION })
     this.need_update = null
     this.default_sync_mode = "default"
