@@ -87,7 +87,7 @@ const card = (meta, stripPunctuation) => {
   return `<div class='grab' draggable='true'>
 <button title='like this item' data-favorited="${is_favorited}" data-src="${meta.file_path}" class='favorite-file'><i class="${favClass}"></i></button>
 <button title='get the source file' data-src="${meta.file_path}" class='open-file'><i class="fa-regular fa-folder-open"></i></button>
-<button title='view in full screen' class='gofullscreen'><i class="fa-solid fa-up-right-and-down-left-from-center"></i></button>
+<button title='view in full screen' class='gofullscreen'><i class="fa-solid fa-eye"></i></button>
 </div>
 <div class='row'>
   <img data-root="${meta.root_path}" data-src="${meta.file_path}" src="/file?file=${encodeURIComponent(meta.file_path)}">

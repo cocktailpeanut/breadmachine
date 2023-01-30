@@ -10,7 +10,6 @@ body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: rgba(0,0,100,0.05);
   font-family: Sans-serif;
   margin: 0;
   display: flex;
@@ -94,10 +93,8 @@ body.dark .empty-container {
   background: white;
   box-sizing: border-box;
   align-items: flex-start;
-  /*
-  border: 1px solid rgba(0,0,0,0.04);
-  */
-
+  outline: 1px solid rgba(0,0,0,0.1);
+  outline-offset: -1px;
   overflow-wrap: break-word;
   word-wrap: break-word;
   -ms-word-break: break-all;
@@ -504,6 +501,8 @@ nav button#favorite {
 }
 .settings .card {
   margin-bottom: 10px;
+  outline: 2px solid cornflowerblue !important;
+  outline-offset: -3px !important;
 }
 .settings .card img {
   height: var(--card-width);
@@ -651,8 +650,7 @@ footer button {
   font-size: 12px;
 }
 .ds-selected {
-  outline: 3px solid black;
-  outline-offset: -3px;
+  background: rgba(100, 149, 237, 0.2) !important;
 }
 footer {
   position: fixed;
@@ -790,11 +788,15 @@ nav #notification {
   color: white !important;
   border: none !important;
 }
-
-
-body.default {
-  background: rgba(0,0,100,0.05);
+.settings a {
+  color: royalblue;
+  opacity: 0.9;
 }
+
+
+
+
+
 body.default .settings main .header h2, body.default .help main .header h2, body.default .favorites main .header h2 {
   margin: 0;
 }
@@ -810,17 +812,9 @@ body.default footer {
   background: white;
 }
 body.default .ds-selected {
-  outline: 3px solid cornflowerblue;
+  outline: 2px solid cornflowerblue;
   outline-offset: -3px;
 }
-/*
-body.default .card .grab:hover {
-  background: royalblue;
-}
-body.default .card.ds-selected .grab {
-  background: royalblue;
-}
-*/
 body.default footer > * {
   color: black; 
   border-left: 1px solid #eee;
@@ -886,11 +880,6 @@ body.default hr {
 body.default .settings .row {
   background: rgba(0,0,100,0.05);
 }
-/*
-body.default .settings .row:nth-child(odd) {
-  background: rgba(0,0,100,0.05);
-}
-*/
 body.default .settings .center-faded {
   background: rgba(0,0,100,0.05);
 }
@@ -952,6 +941,7 @@ html.dark {
 }
 body.dark {
   background: #111;
+  color: rgba(255,255,255,0.9);
 }
 body.dark footer {
   background: #111;
@@ -964,7 +954,7 @@ body.dark .tagger-new input {
   color: white;
 }
 body.dark .ds-selected {
-  outline: 3px solid cornflowerblue;
+  outline: 2px solid cornflowerblue !important;
   outline-offset: -3px;
 }
 body.dark .settings, body.dark .favorites, body.dark .help {
@@ -988,11 +978,10 @@ body.dark nav input {
   color: white;
 }
 body.dark .card {
-  background: rgba(255,255,255,0.05);
-  color: rgba(255,255,255,0.8);
-  /*
-  border: 1px solid rgba(255,255,255,0.02);
-  */
+  outline: 1px solid rgba(255,255,255,0.04);
+  outline-offset: -1px;
+  background: none;
+  color: rgba(255,255,255,0.9);
 }
 body.dark .card .token {
   color: cornflowerblue;
@@ -1025,9 +1014,6 @@ body.dark .container::-webkit-scrollbar {
   width: 10px;
 }
 body.dark .container::-webkit-scrollbar-track {
-/*
-  background: #111;
-  */
 }
 body.dark .container::-webkit-scrollbar-thumb {
   background-clip: content-box;
@@ -1055,11 +1041,6 @@ body.dark .notification-popup a {
 body.dark hr {
   background: rgba(255,255,255,0.05);
 }
-/*
-body.dark .settings .row:nth-child(odd) {
-  background: rgba(255,255,255,0.05);
-}
-*/
 body.dark .settings .center-faded {
   background: rgba(255,255,255,0.05);
 }

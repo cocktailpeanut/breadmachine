@@ -408,7 +408,7 @@ class App {
         scrollElem: document.querySelector(".container"),
         contentElem: document.querySelector(".content"),
         keep_parity: false,
-        //blocks_in_cluster: 3
+        // blocks_in_cluster: 3,
         callbacks: {
           clusterChanged: () => {
             this.selection.init()

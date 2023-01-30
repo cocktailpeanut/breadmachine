@@ -132,7 +132,7 @@
         : [];
       var scroll_top = self.scroll_elem.scrollTop;
       // fixes #39
-      if(rows.length < scroll_top) {
+      if(rows.length * self.options.item_height < scroll_top) {
         self.scroll_elem.scrollTop = 0;
         last_cluster = 0;
       }
@@ -250,7 +250,7 @@
       var items_start = Math.max((opts.rows_in_cluster - opts.rows_in_block) * this.getClusterNum(rows), 0),
         items_end = items_start + opts.rows_in_cluster,
         top_offset = Math.max(items_start * opts.item_height, 0),
-        bottom_offset = Math.max((rows_len - items_end) * opts.item_height, 0),
+        bottom_offset = Math.max((rows_len - items_end) * opts.item_height / opts.items_per_row, 0),
         this_cluster_rows = [],
         rows_above = items_start;
       if(top_offset < 1) {
