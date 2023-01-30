@@ -288,7 +288,7 @@ body[data-style='5'] .card:not(.expanded) img {
   width: 100%;
 }
 .card.expanded img {
-  max-width: 40%;
+  max-width: 50%;
 }
 .card img {
   width: auto;
