@@ -39,6 +39,11 @@ body {
 .view-option-popup {
   padding: 10px;
 }
+.view-option-popup h3 {
+  margin: 0 0 10px;
+  font-size: 1.2rem;
+  font-weight: normal;
+}
 .view-option-popup input[type=range] {
   width: 500px;
   margin: 0;
@@ -207,15 +212,34 @@ body.dark .empty-container {
   flex-direction: row;
   align-items: flex-start;
 }
+.card.expanded td.attr-val .content-text.expanded {
+  display: block;
+}
 .card.expanded td.attr-val .content-text {
   padding: 0px 0;
+
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
+.card.expanded td.attr-val .more {
+  margin: 5px 0 0 0;
 }
 .card.expanded h4, .card.fullscreen h4 {
   display: block;
   font-size: 1.5rem;
-  line-height: 1.5rem;
   font-weight: bold;
-  padding: 0 0 10px;
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  padding: 0;
+  margin: 0 0 10px 0;
 }
 .card.expanded header, .card.fullscreen header {
   padding: 10px 0;
@@ -232,6 +256,19 @@ body.dark .empty-container {
   display: none;
   width: 100%;
   margin: 10px 0;
+}
+.card .more:hover {
+  color: firebrick;
+}
+.card .more {
+  display: none;
+}
+.card.expanded .more {
+  font-size: 0.8rem;
+  display: inline-block;
+  cursor: pointer;
+  margin: 0 0 10px;
+  font-weight: bold;
 }
 .card td {
   box-sizing: border-box;
@@ -263,16 +300,23 @@ body.dark .empty-container {
   font-family: Menlo, monaco, monospace;
 }
 .card h4 {
+/*
   padding: 0px 10px;
+  */
   font-weight: normal;
   box-sizing: border-box;
+  /*
   margin:0;
+  */
   font-size: 0.8rem;
   display: block;
   -webkit-transition: font-size 0.2s ease-in-out;
   -moz-transition: font-size 0.2s ease-in-out;
   -o-transition: font-size 0.2s ease-in-out;
   transition: font-size 0.2s ease-in-out;
+}
+.card h4.expanded {
+  display: block;
 }
 .card:not(.expanded) h4 {
   display: -webkit-box !important;
@@ -350,6 +394,7 @@ tr button.copy-text {
   border-radius: 4px;
   margin-right: 4px;
   background: none;
+  flex-shrink: 0;
 }
 tr button.copy-text:hover {
   color: firebrick !important;
@@ -391,6 +436,18 @@ nav select {
   text-align: right;
   color: black;
   border: none;
+}
+body.dark nav .divider {
+  background: rgba(255,255,255,0.3);
+}
+body.default nav .divider {
+  background: rgba(0,0,0,0.3);
+}
+nav .divider {
+  margin: 0 10px;
+  height: 18px;
+  width: 1px;
+  margin: 0 15px;
 }
 nav > * {
   margin: 5px;
@@ -718,6 +775,7 @@ footer .tag-menu-items > div {
   border-radius: 2px;
   padding: 5px 10px;
   cursor: pointer;
+  margin: 0 0 5px;
 }
 .xmp textarea {
   outline: none;

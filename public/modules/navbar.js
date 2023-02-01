@@ -273,7 +273,7 @@ class Navbar {
       placement: "bottom-end",
       trigger: 'click',
       content: `<div class='view-option-popup'>
-  <h3>Minimized</h3>
+  <h3><i class="fa-solid fa-minimize"></i> Minimized</h3>
   <div class='row'>
     <div>zoom ${this.app.zoom}%</div>
     <div class='flex'>
@@ -282,7 +282,7 @@ class Navbar {
   </div>
   <br>
   <div class='row'>
-    <div>aspect ratio ${this.app.style.aspect_ratio}%</div>
+    <div>height : width => ${this.app.style.aspect_ratio}%</div>
     <div class='flex'>
       <input id='aspect-range' type='range' min="20" max="300" value="${this.app.style.val}" step="1">
     </div>
@@ -302,16 +302,16 @@ class Navbar {
     </div>
   </div>
   <hr>
-  <h3>Expanded</h3>
+  <h3><i class="fa-solid fa-maximize"></i> Expanded</h3>
   <div class='row'>
-    <div>expanded card width ${this.app.style.expanded_width}%</div>
+    <div>card_width : browser_width => ${this.app.style.expanded_width}%</div>
     <div class='flex'>
       <input id='expanded-width' type='range' min="10" max="100" value="${this.app.style.expanded_width}" step="1">
     </div>
   </div>
   <br>
   <div class='row'>
-    <div>expanded image width ${this.app.style.image_width}%</div>
+    <div>image_width : card_width => ${this.app.style.image_width}%</div>
     <div class='flex'>
       <input id='image-width' type='range' min="0" max="100" value="${this.app.style.image_width}" step="1">
     </div>
@@ -333,8 +333,7 @@ class Navbar {
           e.preventDefault()
           e.stopPropagation()
           let aspect_ratio = parseInt(e.target.value)
-          e.target.closest(".row").querySelector("div").innerHTML = "aspect ratio " + e.target.value + "%"
-          console.log("aaspect", aspect_ratio)
+          e.target.closest(".row").querySelector("div").innerHTML = "height : width => " + e.target.value + "%"
           await this.app.user.settings.put({ key: "aspect_ratio", val: aspect_ratio })
           await this.app.init_style()
           this.app.clusterize.refresh(true)
@@ -343,7 +342,7 @@ class Navbar {
           e.preventDefault()
           e.stopPropagation()
           let aspect_ratio = parseInt(e.target.value)
-          e.target.closest(".row").querySelector("div").innerHTML = "expanded card width " + e.target.value + "%"
+          e.target.closest(".row").querySelector("div").innerHTML = "card_width : browser_width => " + e.target.value + "%"
           await this.app.user.settings.put({ key: "expanded_width", val: aspect_ratio })
           await this.app.init_style()
         })
@@ -351,7 +350,7 @@ class Navbar {
           e.preventDefault()
           e.stopPropagation()
           let aspect_ratio = parseInt(e.target.value)
-          e.target.closest(".row").querySelector("div").innerHTML = "expanded image width " + e.target.value + "%"
+          e.target.closest(".row").querySelector("div").innerHTML = "image_width : card_width => " + e.target.value + "%"
           await this.app.user.settings.put({ key: "image_width", val: aspect_ratio })
           await this.app.init_style()
         })

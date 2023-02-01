@@ -195,6 +195,56 @@ class Handler {
                 this.viewer.zoomTo(scaleFactor)
               },
             });
+
+            // h4 truncate
+            let h4 = target.querySelector("h4")
+            target.addEventListener('transitionend', () => {
+              let more = h4.parentNode.querySelector(".more")
+
+              // clone node to remove any previously attached event listeners
+
+              if (h4.offsetHeight < h4.scrollHeight || h4.offsetWidth < h4.scrollWidth) {
+                console.log(h4, h4.offsetHeight, h4.scrollHeight)
+
+                more.classList.remove("hidden") 
+
+                let new_more= more.cloneNode(true);
+                more.parentNode.replaceChild(new_more, more)
+
+                new_more.addEventListener("click", (e) => {
+                  h4.classList.toggle("expanded")
+                  if (h4.classList.contains("expanded")) {
+                    new_more.innerHTML = `<i class="fa-solid fa-angles-up"></i> view less`
+                  } else {
+                    new_more.innerHTML = `<i class="fa-solid fa-angles-down"></i> view more`
+                  }
+                })
+              }
+
+              // content-text truncate
+              let contentTexts = target.querySelectorAll("[data-key$=prompt] .content-text")
+              for(let contentText of contentTexts) {
+                let more = contentText.parentNode.querySelector(".more")
+                if (contentText.offsetHeight < contentText.scrollHeight || contentText.offsetWidth < contentText.scrollWidth) {
+                  more.classList.remove("hidden") 
+
+                  // clone node to remove any previously attached event listeners
+                  let new_more= more.cloneNode(true);
+                  more.parentNode.replaceChild(new_more, more)
+
+                  new_more.addEventListener("click", (e) => {
+                    contentText.classList.toggle("expanded")
+                    if (contentText.classList.contains("expanded")) {
+                      new_more.innerHTML = `<i class="fa-solid fa-angles-up"></i> view less`
+                    } else {
+                      new_more.innerHTML = `<i class="fa-solid fa-angles-down"></i> view more`
+                    }
+                  })
+                }
+                
+              }
+            })
+
           }
         }
       }

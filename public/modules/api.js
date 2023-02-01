@@ -6,6 +6,9 @@ class API {
   sync (rpc) {
     return this.request('sync', rpc)
   }
+  subscribe (folderpaths) {
+    return this.request('subscribe', folderpaths)
+  }
   del (filenames) {
     if (Array.isArray(filenames)) {
       return this.request("del", filenames)

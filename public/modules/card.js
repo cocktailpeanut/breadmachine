@@ -76,7 +76,10 @@ const card = (meta, stripPunctuation) => {
   <td>${attr.key}</td>
   <td class='attr-val'>
     <button title='copy to clipboard' class='copy-text ${display}' data-value="${attr.val}"><i class="fa-regular fa-clone"></i> <span></span></button>
-    <div class='content-text'>${el}</div>
+    <div>
+      <div class='content-text'>${el}</div>
+      <div class='more hidden'><i class="fa-solid fa-angles-down"></i> view more</div>
+    </div>
   </td>
 </tr>`
   }).join("")
@@ -92,7 +95,10 @@ const card = (meta, stripPunctuation) => {
 <div class='row'>
   <img data-root="${meta.root_path}" data-src="${meta.file_path}" src="/file?file=${encodeURIComponent(meta.file_path)}">
   <div class='col'>
-    <h4 class='flex'>${meta.prompt ? meta.prompt : ""}</h4>
+    <h4>${meta.prompt ? meta.prompt : ""}</h4>
+    <div>
+      <div class='more hidden'><i class="fa-solid fa-angles-down"></i> view more</div>
+    </div>
     <div class='xmp'>
       <div class='card-header'>
         <button title='copy the prompt to clipboard' class='copy-text' data-value="${meta.prompt}"><i class='fa-regular fa-clone'></i> <span>Copy Prompt</span></button>

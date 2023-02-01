@@ -42,6 +42,9 @@ class IPC {
     this.ipc.handle("style", (event, _style) => {
       this.style = _style
     })
+    this.ipc.handle('subscribe', async (event, folderpaths) => {
+      
+    })
     this.ipc.handle('sync', async (event, rpc) => {
       console.log("## sync from rpc", rpc)
       let filter
