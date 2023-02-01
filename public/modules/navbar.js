@@ -51,7 +51,6 @@ class Navbar {
     }]
     this.sorter = this.sorters[this.app.sorter_code]
     this.sorter_code = parseInt(this.app.sorter_code)
-//    this.debouncedSearch = debounce(this.app.search)
     document.querySelector("#prev").addEventListener("click", (e) => {
       history.back()
     })
@@ -92,9 +91,6 @@ class Navbar {
     document.querySelector("#sync").addEventListener('click', async (e) => {
       await this.app.synchronize()
     })
-//    document.querySelector(".search").addEventListener('input', (e) => {
-//      this.debouncedSearch(e.target.value)
-//    })
     document.querySelector(".search").addEventListener("keyup", (e) => {
       if (e.key === "Enter") {
         this.app.search(e.target.value)
@@ -277,6 +273,7 @@ class Navbar {
       placement: "bottom-end",
       trigger: 'click',
       content: `<div class='view-option-popup'>
+  <h3>Minimized</h3>
   <div class='row'>
     <div>zoom ${this.app.zoom}%</div>
     <div class='flex'>
@@ -304,6 +301,21 @@ class Navbar {
       <label for='stretch-mode'>stretch</label>
     </div>
   </div>
+  <hr>
+  <h3>Expanded</h3>
+  <div class='row'>
+    <div>expanded card width ${this.app.style.expanded_width}%</div>
+    <div class='flex'>
+      <input id='expanded-width' type='range' min="10" max="100" value="${this.app.style.expanded_width}" step="1">
+    </div>
+  </div>
+  <br>
+  <div class='row'>
+    <div>expanded image width ${this.app.style.image_width}%</div>
+    <div class='flex'>
+      <input id='image-width' type='range' min="0" max="100" value="${this.app.style.image_width}" step="1">
+    </div>
+  </div>
 </div>`,
       allowHTML: true,
       onShown: () => {
@@ -327,9 +339,24 @@ class Navbar {
           await this.app.init_style()
           this.app.clusterize.refresh(true)
         })
+        document.querySelector("#expanded-width").addEventListener("input", async (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          let aspect_ratio = parseInt(e.target.value)
+          e.target.closest(".row").querySelector("div").innerHTML = "expanded card width " + e.target.value + "%"
+          await this.app.user.settings.put({ key: "expanded_width", val: aspect_ratio })
+          await this.app.init_style()
+        })
+        document.querySelector("#image-width").addEventListener("input", async (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          let aspect_ratio = parseInt(e.target.value)
+          e.target.closest(".row").querySelector("div").innerHTML = "expanded image width " + e.target.value + "%"
+          await this.app.user.settings.put({ key: "image_width", val: aspect_ratio })
+          await this.app.init_style()
+        })
         document.querySelectorAll(".fit-selector input[type=radio]").forEach((el) => {
           el.addEventListener("change", async (e) => {
-            console.log("val", e.target.value)
             await this.app.user.settings.put({ key: "fit", val: e.target.value })
             await this.app.init_style()
           })

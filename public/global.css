@@ -192,8 +192,8 @@ body.dark .empty-container {
   opacity: 0;
 }
 .card.expanded {
-  width: 600px;
-  max-width: 30%;
+  width: 100%;
+  max-width: var(--expanded-width);
   -webkit-user-select: auto;
   -ms-user-select: auto;
   user-select: auto;
@@ -288,7 +288,7 @@ body.dark .empty-container {
   height: calc(var(--card-aspect-ratio)/100*var(--card-width));
 }
 .card.expanded img {
-  max-width: 50%;
+  max-width: var(--image-width);
 }
 .card img {
   width: auto;

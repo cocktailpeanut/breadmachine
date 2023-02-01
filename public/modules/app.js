@@ -261,12 +261,18 @@ class App {
   async init_style () {
     let aspect_ratio = await this.user.settings.where({ key: "aspect_ratio" }).first()
     let fit = await this.user.settings.where({ key: "fit" }).first()
+    let expanded_width = await this.user.settings.where({ key: "expanded_width" }).first()
+    let image_width = await this.user.settings.where({ key: "image_width" }).first()
     this.style = {
       aspect_ratio: (aspect_ratio ? aspect_ratio.val : 100),
-      fit: (fit ? fit.val : "contain")
+      fit: (fit ? fit.val : "contain"),
+      expanded_width: (expanded_width ? expanded_width.val : 33),
+      image_width: (image_width ? image_width.val : 50)
     }
     document.body.style.setProperty("--card-aspect-ratio", `${this.style.aspect_ratio}`)
     document.body.style.setProperty("--card-fit", `${this.style.fit}`)
+    document.body.style.setProperty("--expanded-width", `${this.style.expanded_width}%`)
+    document.body.style.setProperty("--image-width", `${this.style.image_width}%`)
     console.log("this.style", this.style)
     this.api.style(this.style)
   }
