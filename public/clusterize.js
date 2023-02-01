@@ -113,6 +113,9 @@
     self.update = function(new_rows, force) {
       // get the number of items in a row
       // set self.row_items_count
+
+      if (self.options.autoadjust) {
+      }
       var nodes = self.content_elem.children;
       if(!nodes.length) return;
       var node = nodes[Math.floor(nodes.length / 2)];

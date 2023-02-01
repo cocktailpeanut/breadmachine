@@ -384,9 +384,9 @@ class Parser {
 
         let promptStr
         if (negative) {
-          promptStr = lines.slice(0, -2)
+          promptStr = lines.slice(0, -2).join("\n")
         } else {
-          promptStr = lines.slice(0, -1)
+          promptStr = lines.slice(0, -1).join("\n")
         }
 
         let attrs = {}

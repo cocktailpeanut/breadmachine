@@ -260,10 +260,19 @@ class App {
   async init_style () {
     this.style = await this.user.settings.where({ key: "style" }).first()
     if (!this.style) this.style = { val: 1 }
-    document.body.setAttribute("data-style", this.style.val)
-    document.querySelector("html").setAttribute("data-style", this.style.val)
-    this.style_selector.setValue(this.style.val, true)
-    this.api.style(this.style.val)
+    if (parseInt(this.style.val) > 5) {
+      document.body.setAttribute("data-style", "custom")
+      document.querySelector("html").setAttribute("data-style", "custom")
+      document.body.style.setProperty("--card-aspect-ratio", `${this.style.val}`)
+      this.style_selector.setValue("custom2", true)
+      this.api.style(this.style.val)
+      this.style_selector.sync();
+    } else {
+      document.body.setAttribute("data-style", this.style.val)
+      document.querySelector("html").setAttribute("data-style", this.style.val)
+      this.style_selector.setValue(this.style.val, true)
+      this.api.style(this.style.val)
+    }
   }
   init_worker () {
     if (!this.worker) {
@@ -408,6 +417,7 @@ class App {
         scrollElem: document.querySelector(".container"),
         contentElem: document.querySelector(".content"),
         keep_parity: false,
+        auto_adjust: true,
         // blocks_in_cluster: 3,
         callbacks: {
           clusterChanged: () => {
@@ -417,7 +427,9 @@ class App {
       });
     }
     this.clusterize.append(data)
-    this.clusterize.refresh(true)
+    setTimeout(() => {
+      this.clusterize.refresh(true)
+    }, 0)
     document.querySelector(".status").innerHTML = ""
     // start observing
     this.observer.unobserve(document.querySelector(".end-marker"));

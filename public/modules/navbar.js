@@ -91,8 +91,21 @@ class Navbar {
     })
     document.querySelector("nav select#styler").addEventListener("change", async (e) => {
       let style = e.target.value
-      await this.app.user.settings.put({ key: "style", val: style })
-      await this.app.init_style()
+      if (style.startsWith("custom")) {
+        let percent = prompt("Enter a number between 20 and 300 (height/width percentage)")
+        let num = parseInt(percent)
+        if (num >= 20 && num <= 300) {
+          await this.app.user.settings.put({ key: "style", val: percent })
+          await this.app.init_style()
+          location.href = location.href
+        } else {
+          alert("please enter a number between 20 and 300")
+          location.href = location.href
+        }
+      } else {
+        await this.app.user.settings.put({ key: "style", val: style })
+        await this.app.init_style()
+      }
     })
     document.querySelector("#sync").addEventListener('click', async (e) => {
       await this.app.synchronize()
