@@ -36,6 +36,23 @@ body {
   margin-top: 20px;
   padding: 10px;
 }
+.view-option-popup hr {
+  background: rgba(255,255,255,0.1) !important;
+}
+.view-option-popup .recycle-check {
+  background: rgba(0,0,0,0.2);
+  padding: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+.view-option-popup .recycle-check input {
+  margin: 5px 10px 0 0;
+}
+.view-option-popup .recycle-check div {
+  margin: 5px 0;
+  display: flex;
+  align-items: flex-start;
+}
 .view-option-popup {
   padding: 10px;
 }
@@ -559,8 +576,8 @@ nav button#favorite {
 }
 .settings .card {
   margin-bottom: 10px;
-  outline: 2px solid cornflowerblue !important;
-  outline-offset: -3px !important;
+  outline: 3px solid cornflowerblue !important;
+  outline-offset: -4px !important;
 }
 .settings .card img {
   height: var(--card-width);
@@ -712,8 +729,11 @@ footer button {
   font-weight: bold;
   font-size: 12px;
 }
+.ds-selected.expanded {
+  background: none !important;
+}
 .ds-selected {
-  background: rgba(100, 149, 237, 0.2) !important;
+  background: rgba(100, 149, 237, 0.4) !important;
 }
 footer {
   position: fixed;
@@ -871,8 +891,8 @@ body.default footer {
   background: white;
 }
 body.default .ds-selected {
-  outline: 2px solid cornflowerblue;
-  outline-offset: -3px;
+  outline: 4px solid cornflowerblue;
+  outline-offset: -4px;
 }
 body.default footer > * {
   color: black; 
@@ -1013,8 +1033,8 @@ body.dark .tagger-new input {
   color: white;
 }
 body.dark .ds-selected {
-  outline: 2px solid cornflowerblue !important;
-  outline-offset: -3px;
+  outline: 4px solid cornflowerblue !important;
+  outline-offset: -4px !important;
 }
 body.dark .settings, body.dark .favorites, body.dark .help {
   color: rgba(255,255,255,0.9);

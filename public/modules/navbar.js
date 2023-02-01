@@ -316,10 +316,28 @@ class Navbar {
       <input id='image-width' type='range' min="0" max="100" value="${this.app.style.image_width}" step="1">
     </div>
   </div>
+  <hr>
+  <h3><i class="fa-solid fa-recycle"></i> Recycle</h3>
+  <div class='row recycle-check'>
+    <div>
+      <input id='recycled-view-check' type='radio' name='recycle-check' value='recycle'>
+      <label for='recycled-view-check'><b>Recycled Views (Recommended):</b> More efficient and uses much less memory. <b>recommended</b> for most use cases.</label>
+    </div>
+    <div>
+      <input id='not-recycled-view-check' type='radio' name='recycle-check' value='not-recycle'>
+      <label for='not-recycled-view-check'><b>Non Recycled Views:</b> Loads all items without recycling. Useful for when you try to bulk select multiple items as you scroll, without worrying about hidden items being recycled. Because there is no recycling, it may use more memory as you load more items.</label>
+    </div>
+  </div>
 </div>`,
       allowHTML: true,
       onShown: () => {
         document.querySelector(`#${this.app.style.fit}-mode`).checked = "checked"
+        console.log("style", this.app.style)
+        if (this.app.style.recycle) {
+          document.querySelector("#recycled-view-check").checked = "checked"
+        } else {
+          document.querySelector("#not-recycled-view-check").checked = "checked"
+        }
         document.querySelector("#zoom-range").addEventListener("input", async (e) => {
           e.preventDefault()
           e.stopPropagation()
@@ -358,6 +376,14 @@ class Navbar {
           el.addEventListener("change", async (e) => {
             await this.app.user.settings.put({ key: "fit", val: e.target.value })
             await this.app.init_style()
+          })
+        })
+        document.querySelectorAll(".recycle-check input[type=radio]").forEach((el) => {
+          el.addEventListener("change", async (e) => {
+            let recycle = (e.target.value === "recycle")
+            await this.app.user.settings.put({ key: "recycle", val: recycle })
+            await this.app.init_style()
+            location.href = location.href
           })
         })
       }

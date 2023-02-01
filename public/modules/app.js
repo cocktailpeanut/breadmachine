@@ -263,11 +263,13 @@ class App {
     let fit = await this.user.settings.where({ key: "fit" }).first()
     let expanded_width = await this.user.settings.where({ key: "expanded_width" }).first()
     let image_width = await this.user.settings.where({ key: "image_width" }).first()
+    let recycle = await this.user.settings.where({ key: "recycle" }).first()
     this.style = {
       aspect_ratio: (aspect_ratio ? aspect_ratio.val : 100),
       fit: (fit ? fit.val : "contain"),
       expanded_width: (expanded_width ? expanded_width.val : 33),
-      image_width: (image_width ? image_width.val : 50)
+      image_width: (image_width ? image_width.val : 50),
+      recycle: (recycle ? recycle.val : true)
     }
     document.body.style.setProperty("--card-aspect-ratio", `${this.style.aspect_ratio}`)
     document.body.style.setProperty("--card-fit", `${this.style.fit}`)
@@ -412,26 +414,35 @@ class App {
     document.querySelector(".content-info").innerHTML = `<i class="fa-solid fa-check"></i> ${count}`
     document.querySelector(".status").innerHTML = "Loading..."
     let data = items.map((item) => {
-      return `<div class='card' data-root="${item.root_path}" data-src="${item.file_path}">${card(item, this.stripPunctuation)}</div>`
+      return `<div class='card' data-root="${item.root_path}" data-src="${item.file_path}">${card(item, this.stripPunctuation, this.style.recycle)}</div>`
     })
-    if (!this.clusterize) {
-      this.clusterize = new Clusterize({
-        scrollElem: document.querySelector(".container"),
-        contentElem: document.querySelector(".content"),
-        keep_parity: false,
-        auto_adjust: true,
-        // blocks_in_cluster: 3,
-        callbacks: {
-          clusterChanged: () => {
-            this.selection.init()
+
+    if (this.style.recycle) {
+      if (!this.clusterize) {
+        this.clusterize = new Clusterize({
+          scrollElem: document.querySelector(".container"),
+          contentElem: document.querySelector(".content"),
+          keep_parity: false,
+          auto_adjust: false,
+          // blocks_in_cluster: 3,
+          rows_in_block: 5000,
+          callbacks: {
+            clusterChanged: () => {
+              this.selection.init()
+            }
           }
-        }
-      });
+        });
+      }
+      this.clusterize.append(data)
+      setTimeout(() => {
+        this.clusterize.refresh(true)
+      }, 0)
+    } else {
+      let fragment = document.createDocumentFragment();
+      let template = document.createElement('template');
+      template.innerHTML = data.join("")
+      document.querySelector(".content").appendChild(template.content)
     }
-    this.clusterize.append(data)
-    setTimeout(() => {
-      this.clusterize.refresh(true)
-    }, 0)
     document.querySelector(".status").innerHTML = ""
     // start observing
     this.observer.unobserve(document.querySelector(".end-marker"));

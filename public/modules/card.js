@@ -1,4 +1,4 @@
-const card = (meta, stripPunctuation) => {
+const card = (meta, stripPunctuation, recycle) => {
   let attributes = Object.keys(meta).map((key) => {
     return { key, val: meta[key] }
   })
@@ -93,7 +93,7 @@ const card = (meta, stripPunctuation) => {
 <button title='view in full screen' class='gofullscreen'><i class="fa-solid fa-eye"></i></button>
 </div>
 <div class='row'>
-  <img data-root="${meta.root_path}" data-src="${meta.file_path}" src="/file?file=${encodeURIComponent(meta.file_path)}">
+  <img loading='${recycle ? "eager" : "lazy"}' data-root="${meta.root_path}" data-src="${meta.file_path}" src="/file?file=${encodeURIComponent(meta.file_path)}">
   <div class='col'>
     <h4>${meta.prompt ? meta.prompt : ""}</h4>
     <div>

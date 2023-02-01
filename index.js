@@ -61,7 +61,6 @@ class Breadmachine {
       app.use(this.basicauth.auth.bind(this.basicauth))
     }
     app.use(express.json());
-
     app.set('view engine', 'ejs');
     app.set('views', path.resolve(__dirname, "views"))
     app.get("/", async (req, res) => {
