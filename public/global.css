@@ -24,6 +24,26 @@ body {
   outline: none;
   overflow: auto;
 }
+#view-option {
+  width: auto;
+  font-size: 13px;
+  line-height: 18px;
+  text-transform: uppercase;
+  font-weight: 100;
+}
+.fit-selector {
+  background: rgba(0,0,0,0.1);
+  margin-top: 20px;
+  padding: 10px;
+}
+.view-option-popup {
+  padding: 10px;
+}
+.view-option-popup input[type=range] {
+  width: 500px;
+  margin: 0;
+  padding: 0;
+}
 .empty-container:empty {
   padding: 0;
 }
@@ -261,35 +281,11 @@ body.dark .empty-container {
   overflow: hidden;
   display: none !important;
 }
-body[data-style='custom'] .card:not(.expanded) img {
+.card:not(.expanded) img {
   width: 100%;
-  object-fit: contain;
+  object-fit: var(--card-fit);
   object-position: center;
   height: calc(var(--card-aspect-ratio)/100*var(--card-width));
-}
-body[data-style='1'] .card:not(.expanded) img {
-  height: var(--card-width);
-  object-fit: contain;
-  width: 100%;
-}
-body[data-style='2'] .card:not(.expanded) img {
-  height: var(--card-width);
-  object-fit: cover;
-  width: 100%;
-}
-body[data-style='3'] .card:not(.expanded) img {
-  height: var(--card-width);
-  width: 100%;
-}
-body[data-style='4'] .card:not(.expanded) img {
-  min-height: var(--card-width);
-  object-fit: contain;
-  width: 100%;
-}
-body[data-style='5'] .card:not(.expanded) img {
-  min-height: var(--card-width);
-  object-fit: cover;
-  width: 100%;
 }
 .card.expanded img {
   max-width: 50%;

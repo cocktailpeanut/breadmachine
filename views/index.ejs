@@ -43,20 +43,7 @@
         <option value='8'>height (↓)</option>
         <option value='9'>height (↑)</option>
       </select>
-      <i class="fa-solid fa-film"></i>
-      <select title='card display mode' id='styler'>
-        <option data-value='1' value='1'>square contain (↓)</option>
-        <option data-value='2' value='2'>square cover (↓)</option>
-        <option data-value='3' value='3'>square stretch (↓)</option>
-        <!--
-        <option data-value='4' value='4'>rectangle contain (↓)</option>
-        <option data-value='5' value='5'>rectangle cover (↓)</option>
-        -->
-        <% if (parseInt(style) > 5) { %> 
-        <option data-value='custom2' value='custom2'>custom <%=style%>% (↓)</option>
-        <% } %>
-        <option data-value='custom' value='custom'>custom (↓)</option>
-      </select>
+      <button id='view-option'><i class="fa-solid fa-film"></i>&nbsp&nbsp;View mode (↓)</button>
       <a title="discord" class='btn' target="_blank" href="https://discord.gg/6MJ6MQScnX"><i class="fa-brands fa-discord"></i></a>
       <a title="twitter" class='btn' target="_blank" href="https://twitter.com/cocktailpeanut"><i class="fa-brands fa-twitter"></i></a>
       <a title="help" class='btn' href="/help"><i class="fa-solid fa-clipboard-question"></i></a>

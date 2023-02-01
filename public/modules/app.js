@@ -27,11 +27,11 @@ class App {
         this.selector.blur()
       }
     })
-    this.style_selector = new TomSelect("nav select#styler", {
-      onDropdownClose: () => {
-        this.style_selector.blur()
-      }
-    })
+//    this.style_selector = new TomSelect("nav select#styler", {
+//      onDropdownClose: () => {
+//        this.style_selector.blur()
+//      }
+//    })
     await this.init_db()
     this.init_rpc()
     await this.bootstrap()
@@ -183,6 +183,7 @@ class App {
       this.offset = 0
       await this.draw()
     }
+    await this.navbar.view_mode()
   }
   async insert (o) {
     let tokens = []
@@ -258,21 +259,16 @@ class App {
     this.api.theme(this.theme.val)
   }
   async init_style () {
-    this.style = await this.user.settings.where({ key: "style" }).first()
-    if (!this.style) this.style = { val: 1 }
-    if (parseInt(this.style.val) > 5) {
-      document.body.setAttribute("data-style", "custom")
-      document.querySelector("html").setAttribute("data-style", "custom")
-      document.body.style.setProperty("--card-aspect-ratio", `${this.style.val}`)
-      this.style_selector.setValue("custom2", true)
-      this.api.style(this.style.val)
-      this.style_selector.sync();
-    } else {
-      document.body.setAttribute("data-style", this.style.val)
-      document.querySelector("html").setAttribute("data-style", this.style.val)
-      this.style_selector.setValue(this.style.val, true)
-      this.api.style(this.style.val)
+    let aspect_ratio = await this.user.settings.where({ key: "aspect_ratio" }).first()
+    let fit = await this.user.settings.where({ key: "fit" }).first()
+    this.style = {
+      aspect_ratio: (aspect_ratio ? aspect_ratio.val : 100),
+      fit: (fit ? fit.val : "contain")
     }
+    document.body.style.setProperty("--card-aspect-ratio", `${this.style.aspect_ratio}`)
+    document.body.style.setProperty("--card-fit", `${this.style.fit}`)
+    console.log("this.style", this.style)
+    this.api.style(this.style)
   }
   init_worker () {
     if (!this.worker) {

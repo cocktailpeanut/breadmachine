@@ -89,24 +89,6 @@ class Navbar {
         await this.app.search()
       }
     })
-    document.querySelector("nav select#styler").addEventListener("change", async (e) => {
-      let style = e.target.value
-      if (style.startsWith("custom")) {
-        let percent = prompt("Enter a number between 20 and 300 (height/width percentage)")
-        let num = parseInt(percent)
-        if (num >= 20 && num <= 300) {
-          await this.app.user.settings.put({ key: "style", val: percent })
-          await this.app.init_style()
-          location.href = location.href
-        } else {
-          alert("please enter a number between 20 and 300")
-          location.href = location.href
-        }
-      } else {
-        await this.app.user.settings.put({ key: "style", val: style })
-        await this.app.init_style()
-      }
-    })
     document.querySelector("#sync").addEventListener('click', async (e) => {
       await this.app.synchronize()
     })
@@ -287,6 +269,72 @@ class Navbar {
   <div>${value.latest.content}</div>
 </div>`,
       allowHTML: true,
+    });
+  }
+  view_mode() {
+    tippy(document.querySelector("nav button#view-option"), {
+      interactive: true,
+      placement: "bottom-end",
+      trigger: 'click',
+      content: `<div class='view-option-popup'>
+  <div class='row'>
+    <div>zoom ${this.app.zoom}%</div>
+    <div class='flex'>
+      <input id='zoom-range' type='range' min="20" max="300" value="${this.app.zoom}" step="1">
+    </div>
+  </div>
+  <br>
+  <div class='row'>
+    <div>aspect ratio ${this.app.style.aspect_ratio}%</div>
+    <div class='flex'>
+      <input id='aspect-range' type='range' min="20" max="300" value="${this.app.style.val}" step="1">
+    </div>
+  </div>
+  <div class='row fit-selector'>
+    <div>
+      <input id='contain-mode' type='radio' name='fit' value='contain'>
+      <label for='contain-mode'>contain</label>
+    </div>
+    <div>
+      <input id='cover-mode' type='radio' name='fit' value='cover'>
+      <label for='cover-mode'>cover</label>
+    </div>
+    <div>
+      <input id='stretch-mode' type='radio' name='fit' value='stretch'>
+      <label for='stretch-mode'>stretch</label>
+    </div>
+  </div>
+</div>`,
+      allowHTML: true,
+      onShown: () => {
+        document.querySelector(`#${this.app.style.fit}-mode`).checked = "checked"
+        document.querySelector("#zoom-range").addEventListener("input", async (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          let zoom = parseInt(e.target.value)
+          await this.app.user.settings.put({ key: "zoom", val: e.target.value })
+          e.target.closest(".row").querySelector("div").innerHTML = "zoom " + e.target.value + "%"
+          this.app.zoom = parseInt(e.target.value)
+          this.app.zoomer.resized()
+        })
+        document.querySelector("#aspect-range").addEventListener("input", async (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          let aspect_ratio = parseInt(e.target.value)
+          e.target.closest(".row").querySelector("div").innerHTML = "aspect ratio " + e.target.value + "%"
+          console.log("aaspect", aspect_ratio)
+          await this.app.user.settings.put({ key: "aspect_ratio", val: aspect_ratio })
+          await this.app.init_style()
+          this.app.clusterize.refresh(true)
+        })
+        document.querySelectorAll(".fit-selector input[type=radio]").forEach((el) => {
+          el.addEventListener("change", async (e) => {
+            console.log("val", e.target.value)
+            await this.app.user.settings.put({ key: "fit", val: e.target.value })
+            await this.app.init_style()
+          })
+        })
+      }
     });
   }
 }

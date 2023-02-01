@@ -99,15 +99,15 @@
         rows = "<div class='center-faded'>To get started, click 'edit' to connect folders</div>"
       }
 
+/*
       let currentZoom = await user.settings.where({ key: "zoom" }).first()
       let zoom;
       if (currentZoom) {
         zoom = currentZoom.val
       } else {
-//        zoom = window.electronAPI.getzoom() * 100
         zoom = Math.round(100 / window.devicePixelRatio)
       }
-//      document.body.style.zoom = `${zoom}%`
+      */
 
       let logout_url = `${location.protocol}//log:out@${location.host}`
       document.querySelector(".settings").innerHTML = `<main>
@@ -136,25 +136,6 @@
         <div class='row'>
           <button id='dark-theme'><i class="fa-solid fa-moon"></i> Dark</button>
           <button id='default-theme'><i class="fa-regular fa-sun"></i> Light</button>
-        </div>
-      </div>
-      <br><br>
-      <div class='header'>
-        <h2>Zoom</h2>
-        <div class='flexible'></div>
-      </div>
-      <div class='rows'>
-        <div class="card ds-selectable">
-          <div class="grab" draggable="true">
-            <button class="favorite-file"><i class="fa-regular fa-heart"></i></button>
-            <button class="open-file"><i class="fa-regular fa-folder-open"></i></button>
-            <button class="gofullscreen"><i class="fa-solid fa-eye"></i></button>
-          </div>
-<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAQAAABecRxxAAAEmElEQVR42u3UMQEAAAzCsOHf9CQggERCj+aAWZEADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAwAAkAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwAAAAwAMADAAwADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAAADAAwAMADAAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADAAwAMAAAAMADADoHnvSAgHwhtNTAAAAAElFTkSuQmCC">
-        </div>
-        <div class='row currentZoom'>${zoom}%</div>
-        <div class='row'>
-          <input type='range' min="10" max="200" value="${zoom}" step="1">
         </div>
       </div>
       <br><br>
@@ -210,9 +191,9 @@
         </div>
       <% } %>
     </main>`
-      var app = { zoom }
-      const zoomer = new Zoomer(app)
-      await zoomer.init()
+//      var app = { zoom }
+//      const zoomer = new Zoomer(app)
+//      await zoomer.init()
 
       document.querySelector("#prev").addEventListener("click", (e) => {
         history.back()
@@ -220,16 +201,16 @@
       document.querySelector("#next").addEventListener("click", (e) => {
         history.forward()
       })
-      document.querySelector("input[type=range]").addEventListener("input", async (e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        //window.electronAPI.zoom(e.target.value)
-        let zoom = parseInt(e.target.value)
-        await user.settings.put({ key: "zoom", val: e.target.value })
-        e.target.closest(".rows").querySelector(".currentZoom").innerHTML = "" + e.target.value + "%"
-        app.zoom = parseInt(e.target.value)
-        zoomer.resized()
-      })
+//      document.querySelector("input[type=range]").addEventListener("input", async (e) => {
+//        e.preventDefault()
+//        e.stopPropagation()
+//        //window.electronAPI.zoom(e.target.value)
+//        let zoom = parseInt(e.target.value)
+//        await user.settings.put({ key: "zoom", val: e.target.value })
+//        e.target.closest(".rows").querySelector(".currentZoom").innerHTML = "" + e.target.value + "%"
+//        app.zoom = parseInt(e.target.value)
+//        zoomer.resized()
+//      })
       document.querySelector("#reindex").addEventListener("click", async (e) => {
         e.preventDefault()
         e.stopPropagation()
