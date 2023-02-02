@@ -182,6 +182,7 @@ class App {
       });
       this.offset = 0
       await this.draw()
+      await this.subscribe()
     }
     await this.navbar.view_mode()
   }
@@ -228,21 +229,54 @@ class App {
     let cp = await this.user.checkpoints.put({ root_path, btime })
     this.checkpoints[root_path] = btime
   }
+  notify() {
+    if (!this.notify_audio) {
+      this.notify_audio = new Audio('pop.mp3');
+    }
+    this.notify_audio.play();
+  }
   init_rpc() {
     this.api.listen(async (_event, value) => {
-      queueMicrotask(async () => {
-        if (value.meta) {
-          let response = await this.insert(value.meta).catch((e) => {
-            console.log("ERROR", e)
-          })
+      if (value.method) {
+        if (value.method === "new") {
+          for(let meta of value.params) {
+            queueMicrotask(async () => {
+              let response = await this.insert(meta).catch((e) => {
+                console.log("ERROR", e)
+              })
+
+              let item = meta
+              let data = `<div class='card' data-root="${item.root_path}" data-src="${item.file_path}">${card(item, this.stripPunctuation, this.style.recycle)}</div>`
+              if (this.style.recycle) {
+                this.clusterize.prepend([data])
+                setTimeout(() => {
+                  this.clusterize.refresh(true)
+                }, 100)
+              } else {
+                let fragment = document.createDocumentFragment();
+                let template = document.createElement('template');
+                template.innerHTML = data
+                document.querySelector(".content").prepend(template.content)
+              }
+              this.notify()
+            })
+          }
         }
-        this.sync_counter++;
-        if (this.sync_counter === value.total) {
-          this.sync_complete = true
-        }
-        let ratio = value.progress/value.total
-        this.bar.go(100*value.progress/value.total);
-      })
+      } else {
+        queueMicrotask(async () => {
+          if (value.meta) {
+            let response = await this.insert(value.meta).catch((e) => {
+              console.log("ERROR", e)
+            })
+          }
+          this.sync_counter++;
+          if (this.sync_counter === value.total) {
+            this.sync_complete = true
+          }
+          let ratio = value.progress/value.total
+          this.bar.go(100*value.progress/value.total);
+        })
+      }
     })
   }
   async init_zoom () {
@@ -275,7 +309,6 @@ class App {
     document.body.style.setProperty("--card-fit", `${this.style.fit}`)
     document.body.style.setProperty("--expanded-width", `${this.style.expanded_width}%`)
     document.body.style.setProperty("--image-width", `${this.style.image_width}%`)
-    console.log("this.style", this.style)
     this.api.style(this.style)
   }
   init_worker () {
@@ -302,6 +335,10 @@ class App {
         }
       }
     }
+  }
+  async subscribe() {
+    let folderpaths = await this.user.folders.toArray()
+    await this.api.subscribe(folderpaths.map(x => x.name))
   }
   async synchronize (paths, cb) {
     document.querySelector("#sync").classList.add("disabled")
@@ -436,7 +473,7 @@ class App {
       this.clusterize.append(data)
       setTimeout(() => {
         this.clusterize.refresh(true)
-      }, 0)
+      }, 100)
     } else {
       let fragment = document.createDocumentFragment();
       let template = document.createElement('template');

@@ -4,12 +4,16 @@ const getport = require('getport')
 const os = require('os')
 const fs = require('fs')
 const yaml = require('js-yaml');
+const cookieParser = require('cookie-parser');
+const { v4: uuidv4 } = require('uuid');
 const Updater = require('./updater/index')
 const packagejson = require('./package.json')
 const BasicAuth = require('./basicauth')
 const IPC = require('./ipc')
+const Listener = require('./listener')
 class Breadmachine {
   async init(config) {
+    this.listener = new Listener(this)
     this.config = config
     let settings = await this.settings()
     if (settings.accounts && Object.keys(settings.accounts).length > 0) {
@@ -51,6 +55,7 @@ class Breadmachine {
   }
   start() {
     let app = express()
+    app.use(cookieParser());
     app.use((req, res, next) => {
       let a = req.get("user-agent")
       req.agent = (/breadboard/.test(a) ? "electron" : "web")
@@ -68,6 +73,10 @@ class Breadmachine {
       let sync_folder = (req.query.sync_folder ? req.query.sync_folder : "")
       if (req.query && req.query.sorter_code) {
         this.current_sorter_code = req.query.sorter_code
+      }
+      if (!req.cookies.session) {
+        let session = uuidv4()
+        res.cookie('session', session)
       }
       res.render("index", {
         agent: req.agent,
@@ -158,7 +167,7 @@ class Breadmachine {
     app.post("/ipc", async (req, res) => {
       let name = req.body.name
       let args = req.body.args
-      let r = await this.ipc.call(name, ...args)
+      let r = await this.ipc.call(req.cookies.session, name, ...args)
       if (r) {
         res.json(r)
       } else {

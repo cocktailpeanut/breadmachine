@@ -354,7 +354,9 @@ class Navbar {
           e.target.closest(".row").querySelector("div").innerHTML = "height : width => " + e.target.value + "%"
           await this.app.user.settings.put({ key: "aspect_ratio", val: aspect_ratio })
           await this.app.init_style()
-          this.app.clusterize.refresh(true)
+          if (this.app.clusterize) {
+            this.app.clusterize.refresh(true)
+          }
         })
         document.querySelector("#expanded-width").addEventListener("input", async (e) => {
           e.preventDefault()

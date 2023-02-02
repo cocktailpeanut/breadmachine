@@ -36,17 +36,21 @@ class IPC {
     this.queue = fastq.promise(async (msg) => {
       this.sse.send(JSON.stringify(msg))
     }, 1)
-    this.ipc.handle("theme", (event, _theme) => {
+    this.ipc.handle("theme", (session, _theme) => {
       this.theme = _theme
     })
-    this.ipc.handle("style", (event, _style) => {
+    this.ipc.handle("style", (session, _style) => {
       this.style = _style
     })
-    this.ipc.handle('subscribe', async (event, folderpaths) => {
-      
+    this.ipc.handle('subscribe', async (session, folderpaths) => {
+      this.app.listener.subscribe({
+        session,
+        name: "folders",
+        args: folderpaths
+      })
     })
-    this.ipc.handle('sync', async (event, rpc) => {
-      console.log("## sync from rpc", rpc)
+    this.ipc.handle('sync', async (session, rpc) => {
+      console.log("## sync from rpc", session, rpc)
       let filter
       if (rpc.paths) {
         let diffusionbee;
@@ -133,32 +137,32 @@ class IPC {
         }
       }
     })
-    this.ipc.handle('del', async (event, filenames) => {
+    this.ipc.handle('del', async (session, filenames) => {
       for(let filename of filenames) {
         await fs.promises.rm(filename).catch((e) => {
           console.log("error", e)
         })
       }
     })
-    this.ipc.handle('defaults', async (event) => {
+    this.ipc.handle('defaults', async (session) => {
       let settings = await this.app.settings()
       return settings.folders
     })
-    this.ipc.handle('gm', async (event, rpc) => {
+    this.ipc.handle('gm', async (session, rpc) => {
       if (rpc.cmd === "set" || rpc.cmd === "rm") {
         let res = await this.gm[rpc.cmd](...rpc.args)
         return res
       } 
     })
-    this.ipc.handle('xmp', async (event, file_path) => {
+    this.ipc.handle('xmp', async (session, file_path) => {
       let res = await this.gm.get(file_path)
       return xmlFormatter(res.chunk.data.replace("XML:com.adobe.xmp\x00\x00\x00\x00\x00", ""), {
         indentation: "  "
       })
     })
   }
-  async call(name, ...args) {
-    let r = await this.handlers[name](null, ...args)
+  async call(session, name, ...args) {
+    let r = await this.handlers[name](session, ...args)
     return r
   }
 }
