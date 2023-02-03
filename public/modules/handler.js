@@ -129,7 +129,7 @@ class Handler {
           ]
         }
 
-        if (key === "width" || key === "height") {
+        if (key === "width" || key === "height" || key === "seed" || key === "cfg_scale" || key === "steps") {
           popup_items = [
             `<span class='popup-link' data-key='-${key}' data-value='${val}'>&lt;</span>`,
             `<span class='popup-link' data-key='-=${key}' data-value='${val}'>&lt;=</span>`,

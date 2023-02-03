@@ -9,8 +9,8 @@ importScripts("./dexie.js")
 //})
 var db = new Dexie("data")
 var user = new Dexie("user")
-db.version(1).stores({
-  files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens",
+db.version(2).stores({
+  files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens, seed, cfg_scale, steps",
 })
 user.version(1).stores({
   folders: "&name",
@@ -25,51 +25,27 @@ const esc = (str) => {
 }
 function applyFilter(q, filters) {
   if (filters.length > 0) {
+    let numbers = [{
+      key: "width",
+      type: "int",
+    }, {
+      key: "height",
+      type: "int",
+    }, {
+      key: "seed",
+      type: "int"
+    }, {
+      key: "cfg_scale",
+      type: "float"
+    }, {
+      key: "steps",
+      type: "int",
+    }]
     for(let filter of filters) {
       if (filter.before) {
         q = q.and("btime").belowOrEqual(new Date(filter.before).getTime())
       } else if (filter.after) {
         q = q.and("btime").aboveOrEqual(new Date(filter.after).getTime())
-      } else if (filter.width) {
-        q = q.and((item) => {
-          return item.width === parseInt(filter.width)
-        })
-      } else if (filter.height) {
-        q = q.and((item) => {
-          return item.height === parseInt(filter.height)
-        })
-      } else if (filter["+width"]) {
-        q = q.and((item) => {
-          return item.width > parseInt(filter["+width"])
-        })
-      } else if (filter["+height"]) {
-        q = q.and((item) => {
-          return item.height > parseInt(filter["+height"])
-        })
-      } else if (filter["-width"]) {
-        q = q.and((item) => {
-          return item.width < parseInt(filter["-width"])
-        })
-      } else if (filter["-height"]) {
-        q = q.and((item) => {
-          return item.height < parseInt(filter["-height"])
-        })
-      } else if (filter["+=width"]) {
-        q = q.and((item) => {
-          return item.width >= parseInt(filter["+=width"])
-        })
-      } else if (filter["+=height"]) {
-        q = q.and((item) => {
-          return item.height >= parseInt(filter["+=height"])
-        })
-      } else if (filter["-=width"]) {
-        q = q.and((item) => {
-          return item.width <= parseInt(filter["-=width"])
-        })
-      } else if (filter["-=height"]) {
-        q = q.and((item) => {
-          return item.height <= parseInt(filter["-=height"])
-        })
       } else if (filter["-tag"]) {
         let tag = filter["-tag"].slice(1).toLowerCase()   // gotta strip off the "-" to get only the "tag:..."
         q = q.and((item) => {
@@ -121,6 +97,34 @@ function applyFilter(q, filters) {
         q = q.and((item) => {
           return !new RegExp(esc(filter["-file_path"]), "i").test(item.file_path)
         })
+      } else {
+        for(let number of numbers) {
+          let operators = ["-", "-=", "", "+=", "+"]
+          for(let operator of operators) {
+            if (filter[`${operator}${number.key}`]) {
+              console.log(operator, number.key)
+              q = q.and((item) => {
+                let val
+                if (number.type === "int") {
+                  val = parseInt(filter[`${operator}${number.key}`])
+                } else if (number.type === "float") {
+                  val = parseFloat(filter[`${operator}${number.key}`])
+                }
+                if (operator === "") {
+                  return item[number.key] === val
+                } else if (operator === "-") {
+                  return item[number.key] < val
+                } else if (operator === "-=") {
+                  return item[number.key] <= val
+                } else if (operator === "+") {
+                  return item[number.key] > val
+                } else if (operator === "+=") {
+                  return item[number.key] >= val
+                }
+              })
+            }
+          } 
+        }
       }
     }
   }
@@ -237,6 +241,22 @@ function find (phrase) {
   let prefixes = preprocess_query(phrase)
   let tokens = []
   let filters = []
+  let numbers = [{
+    key: "width",
+    type: "int",
+  }, {
+    key: "height",
+    type: "int",
+  }, {
+    key: "seed",
+    type: "int"
+  }, {
+    key: "cfg_scale",
+    type: "float"
+  }, {
+    key: "steps",
+    type: "int",
+  }]
   for(let prefix of prefixes) {
     if (prefix.startsWith("before:")) {
       filters.push({
@@ -262,46 +282,6 @@ function find (phrase) {
       filters.push({
         file_path: prefix.replace("file_path:", "").trim()
       })
-    } else if (prefix.startsWith("width:")) {
-      filters.push({
-        width: prefix.replace("width:", "").trim()
-      })
-    } else if (prefix.startsWith("height:")) {
-      filters.push({
-        height: prefix.replace("height:", "").trim()
-      })
-    } else if (prefix.startsWith("-width:")) {
-      filters.push({
-        "-width": prefix.replace("-width:", "").trim()
-      })
-    } else if (prefix.startsWith("-height:")) {
-      filters.push({
-        "-height": prefix.replace("-height:", "").trim()
-      })
-    } else if (prefix.startsWith("+width:")) {
-      filters.push({
-        "+width": prefix.replace("+width:", "").trim()
-      })
-    } else if (prefix.startsWith("+height:")) {
-      filters.push({
-        "+height": prefix.replace("+height:", "").trim()
-      })
-    } else if (prefix.startsWith("+=width:")) {
-      filters.push({
-        "+=width": prefix.replace("+=width:", "").trim()
-      })
-    } else if (prefix.startsWith("+=height:")) {
-      filters.push({
-        "+=height": prefix.replace("+=height:", "").trim()
-      })
-    } else if (prefix.startsWith("-=width:")) {
-      filters.push({
-        "-=width": prefix.replace("-=width:", "").trim()
-      })
-    } else if (prefix.startsWith("-=height:")) {
-      filters.push({
-        "-=height": prefix.replace("-=height:", "").trim()
-      })
     } else if (prefix.startsWith("-tag:")) {
       filters.push({ "-tag": prefix })
     } else if (prefix.startsWith("-:")) {
@@ -311,7 +291,23 @@ function find (phrase) {
         "-file_path": prefix.replace("-file_path:", "").trim()
       })
     } else {
-      tokens.push(prefix)
+      let operators = ["-", "-=", "", "+=", "+"]
+      let isnumber;
+      for(let number of numbers) {
+        for(let operator of operators) {
+          if (prefix.startsWith(`${operator}${number.key}:`)) {
+            isnumber = true
+            filters.push({
+              [`${operator}${number.key}`]: prefix.replace(`${operator}${number.key}:`, "").trim()
+            })
+            break;
+          }
+        }
+        if (isnumber) break;
+      }
+      if (!isnumber) {
+        tokens.push(prefix)
+      }
     }
   }
 

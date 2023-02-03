@@ -69,8 +69,8 @@ class App {
     // upgrade from legacy db schema (breadboard => data + user)
     // 1. The "data" DB only contains attributes that can be crawled from the files
     this.db = new Dexie("data")
-    this.db.version(1).stores({
-      files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens",
+    this.db.version(2).stores({
+      files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens, seed, cfg_scale, steps",
     })
 
     // 2. The "user" DB contains attributes that can NOT be crawled from the files
