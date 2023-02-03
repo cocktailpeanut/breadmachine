@@ -20,6 +20,35 @@ class App {
     }
     this.domparser = new DOMParser()
   }
+  async init_live() {
+    let live = await this.user.settings.where({ key: "live" }).first()
+    console.log("live", live)
+    if (live) {
+      this.live = live.val
+    } else {
+      this.live = true
+    }
+    document.querySelector("#live-option span").innerHTML = `&nbsp;&nbsp;LIVE ${this.live ? "ON" : "OFF"}`
+    if (this.live) {
+      document.querySelector("#live-option i").classList.add("fa-beat")
+      document.querySelector("#live-option").classList.add("bold")
+    } else {
+      document.querySelector("#live-option i").classList.remove("fa-beat")
+      document.querySelector("#live-option").classList.remove("bold")
+    }
+    document.querySelector("#live-option").addEventListener("click", async (e) => {
+      this.live = !this.live 
+      await this.user.settings.put({ key: "live", val: this.live })
+      document.querySelector("#live-option span").innerHTML = `&nbsp;&nbsp;LIVE ${this.live ? "ON" : "OFF"}`
+      if (this.live) {
+        document.querySelector("#live-option i").classList.add("fa-beat")
+        document.querySelector("#live-option").classList.add("bold")
+      } else {
+        document.querySelector("#live-option i").classList.remove("fa-beat")
+        document.querySelector("#live-option").classList.remove("bold")
+      }
+    })
+  }
   async init () {
     console.log("INIT", VERSION)
     this.selector = new TomSelect("nav select#sorter", {
@@ -185,8 +214,9 @@ class App {
       await this.subscribe()
     }
     await this.navbar.view_mode()
+    await this.init_live()
   }
-  async insert (o) {
+  async insert (o, options) {
     let tokens = []
     let wordSet = {}
     if (o.prompt && typeof o.prompt === 'string' && o.prompt.length > 0) {
@@ -205,6 +235,10 @@ class App {
 
     await this.db.files.put({ ...o, tokens })
 
+    // options.silent:true => don't update the checkpoint
+    // options.silent:false => update the checkpoint (default)
+    if (options && options.silent) return
+
     if (this.checkpoints[o.root_path]) {
       if (this.checkpoints[o.root_path] < o.btime) {
         await this.updateCheckpoint(o.root_path, o.btime)
@@ -219,6 +253,7 @@ class App {
         await this.updateCheckpoint(o.root_path, o.btime)
       }
     }
+
   }
   async checkpoint (root_path) {
     let cp = await this.user.checkpoints.where({ root_path }).first()
@@ -239,27 +274,25 @@ class App {
     this.api.listen(async (_event, value) => {
       if (value.method) {
         if (value.method === "new") {
-          for(let meta of value.params) {
-            queueMicrotask(async () => {
-              let response = await this.insert(meta).catch((e) => {
-                console.log("ERROR", e)
+          if (this.live) {
+            for(let meta of value.params) {
+              queueMicrotask(async () => {
+                let response = await this.insert(meta, { silent: true }).catch((e) => {
+                  console.log("ERROR", e)
+                })
+                let checkpoint = document.querySelector(`.card:first-child tr[data-key='${this.navbar.sorter.column}'] .copy-text`).getAttribute("data-value")
+                this.worker.postMessage({
+                  query: this.query,
+                  sorter: this.navbar.sorter,
+                  offset: 0,
+                  limit: 10,
+                  options: {
+                    checkpoint,
+                    prepend: true  
+                  }
+                })
               })
-
-              let item = meta
-              let data = `<div class='card' data-root="${item.root_path}" data-src="${item.file_path}">${card(item, this.stripPunctuation, this.style.recycle)}</div>`
-              if (this.style.recycle) {
-                this.clusterize.prepend([data])
-                setTimeout(() => {
-                  this.clusterize.refresh(true)
-                }, 100)
-              } else {
-                let fragment = document.createDocumentFragment();
-                let template = document.createElement('template');
-                template.innerHTML = data
-                document.querySelector(".content").prepend(template.content)
-              }
-              this.notify()
-            })
+            }
           }
         }
       } else {
@@ -315,23 +348,47 @@ class App {
     if (!this.worker) {
       this.worker = new Worker("./worker.js")
       this.worker.onmessage = async (e) => {
-        if (e.data.res.length > 0) {
-          await this.fill(e.data)
-          document.querySelector("#sync").classList.remove("disabled")
-          document.querySelector("#sync").disabled = false
-          document.querySelector("#sync i").classList.remove("fa-spin")
-          this.selection.init()
-          this.zoomer.resized()
-        } else {
-          // if this.query is null => we're on the home page
-          // if homepage, and no result, tell people to connect some folders
-          if (this.offset === 0) {
-            if (!this.query) {
-              document.querySelector(".empty-container").innerHTML = `Connect a folder to get started.<br><br>
-  <a href="/connect" class='btn'><i class="fa-solid fa-plug"></i> Connect</a>`
+        if (e.data.options) {
+          if (e.data.options.prepend) {
+            if (e.data.res.length > 0) {
+              document.querySelector(".content-info").innerHTML = `<i class="fa-solid fa-check"></i> ${e.data.count}`
+              let data = e.data.res.map((item) => {
+                return `<div class='card' data-root="${item.root_path}" data-src="${item.file_path}">${card(item, this.stripPunctuation, this.style.recycle)}</div>`
+              })
+              if (this.style.recycle) {
+                this.clusterize.prepend([data])
+                setTimeout(() => {
+                  this.clusterize.refresh(true)
+                }, 100)
+              } else {
+                let fragment = document.createDocumentFragment();
+                let template = document.createElement('template');
+                template.innerHTML = data
+                document.querySelector(".content").prepend(template.content)
+              }
+              this.notify()
             }
           }
-          document.querySelector(".end-marker .caption i").classList.remove("fa-bounce")
+        } else {
+          if (e.data.res.length > 0) {
+            await this.fill(e.data)
+            document.querySelector("#sync").classList.remove("disabled")
+            document.querySelector("#sync").disabled = false
+            document.querySelector("#sync i").classList.remove("fa-spin")
+            this.selection.init()
+            this.zoomer.resized()
+          } else {
+            await this.fill(e.data)
+            // if this.query is null => we're on the home page
+            // if homepage, and no result, tell people to connect some folders
+            if (this.offset === 0) {
+              if (!this.query) {
+                document.querySelector(".empty-container").innerHTML = `Connect a folder to get started.<br><br>
+    <a href="/connect" class='btn'><i class="fa-solid fa-plug"></i> Connect</a>`
+              }
+            }
+            document.querySelector(".end-marker .caption i").classList.remove("fa-bounce")
+          }
         }
       }
     }
@@ -454,36 +511,42 @@ class App {
       return `<div class='card' data-root="${item.root_path}" data-src="${item.file_path}">${card(item, this.stripPunctuation, this.style.recycle)}</div>`
     })
 
-    if (this.style.recycle) {
-      if (!this.clusterize) {
-        this.clusterize = new Clusterize({
-          scrollElem: document.querySelector(".container"),
-          contentElem: document.querySelector(".content"),
-          keep_parity: false,
-          auto_adjust: false,
-          // blocks_in_cluster: 3,
-          rows_in_block: 5000,
-          callbacks: {
-            clusterChanged: () => {
-              this.selection.init()
+    if (items.length > 0) {
+      if (this.style.recycle) {
+        if (!this.clusterize) {
+          this.clusterize = new Clusterize({
+            scrollElem: document.querySelector(".container"),
+            contentElem: document.querySelector(".content"),
+            keep_parity: false,
+            auto_adjust: false,
+            // blocks_in_cluster: 3,
+            rows_in_block: 5000,
+            callbacks: {
+              clusterChanged: () => {
+                this.selection.init()
+              }
             }
-          }
-        });
+          });
+        }
+        this.clusterize.append(data)
+        setTimeout(() => {
+          this.clusterize.refresh(true)
+        }, 100)
+      } else {
+        let fragment = document.createDocumentFragment();
+        let template = document.createElement('template');
+        template.innerHTML = data.join("")
+        document.querySelector(".content").appendChild(template.content)
       }
-      this.clusterize.append(data)
-      setTimeout(() => {
-        this.clusterize.refresh(true)
-      }, 100)
-    } else {
-      let fragment = document.createDocumentFragment();
-      let template = document.createElement('template');
-      template.innerHTML = data.join("")
-      document.querySelector(".content").appendChild(template.content)
     }
     document.querySelector(".status").innerHTML = ""
-    // start observing
-    this.observer.unobserve(document.querySelector(".end-marker"));
-    this.observer.observe(document.querySelector(".end-marker"));
+
+    if (items.length > 0) {
+      // start observing
+      this.observer.unobserve(document.querySelector(".end-marker"));
+      this.observer.observe(document.querySelector(".end-marker"));
+    }
+
   }
   async draw () {
     document.querySelector(".search").value = (this.query && this.query.length ? this.query : "")
@@ -500,10 +563,10 @@ class App {
       document.querySelector("nav #favorite").classList.remove("selected") 
       document.querySelector("nav #favorite i").className = "fa-regular fa-star"
     }
-    this.worker.postMessage({ query: this.query, sorter: this.navbar.sorter, offset: this.offset })
+    this.worker.postMessage({ query: this.query, sorter: this.navbar.sorter, offset: this.offset, limit: 500, options: null })
 
   }
-  async search (query, silent) {
+  async search (query, options) {
     let params = new URLSearchParams({ sorter_code: this.sorter_code })
     if (query && query.length > 0) {
       params.set("query", query)

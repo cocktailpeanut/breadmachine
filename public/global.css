@@ -24,6 +24,18 @@ body {
   outline: none;
   overflow: auto;
 }
+#live-option.bold {
+  font-weight: bold;
+  opacity: 1;
+}
+#live-option {
+  opacity: 0.7;
+  width: auto;
+  font-size: 13px;
+  line-height: 18px;
+  text-transform: uppercase;
+  font-weight: 100;
+}
 #view-option {
   width: auto;
   font-size: 13px;

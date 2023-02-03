@@ -10,10 +10,9 @@ const Updater = require('./updater/index')
 const packagejson = require('./package.json')
 const BasicAuth = require('./basicauth')
 const IPC = require('./ipc')
-const Listener = require('./listener')
 class Breadmachine {
+  ipc = {}
   async init(config) {
-    this.listener = new Listener(this)
     this.config = config
     let settings = await this.settings()
     if (settings.accounts && Object.keys(settings.accounts).length > 0) {
@@ -35,7 +34,6 @@ class Breadmachine {
     this.need_update = null
     this.default_sync_mode = "default"
     this.current_sorter_code = 0
-    this.ipc = new IPC(this, config)
     await this.updateCheck().catch((e) => {
       console.log("update check error", e)
     })
@@ -52,6 +50,17 @@ class Breadmachine {
     })
     attrs.folders = folders
     return attrs
+  }
+  auth(req, res) {
+    let session = (req.cookies.session ? req.cookies.session : uuidv4())
+    if (!this.ipc[session]) {
+      this.ipc[session] = new IPC(this, session, this.config)
+      if (this.config.onconnect) {
+        this.config.onconnect(session)
+      }
+    }
+    res.cookie('session', session)
+    return session
   }
   start() {
     let app = express()
@@ -74,10 +83,8 @@ class Breadmachine {
       if (req.query && req.query.sorter_code) {
         this.current_sorter_code = req.query.sorter_code
       }
-      if (!req.cookies.session) {
-        let session = uuidv4()
-        res.cookie('session', session)
-      }
+      let session = this.auth(req, res)
+      console.log("style", this.ipc[session].style)
       res.render("index", {
         agent: req.agent,
         platform: process.platform,
@@ -88,17 +95,26 @@ class Breadmachine {
         sync_folder,
         need_update: this.need_update,
         current_sorter_code: this.current_sorter_code,
-        theme: this.ipc.theme,
-        style: this.ipc.style,
+        theme: this.ipc[session].theme,
+        style: this.ipc[session].style,
       })
       if (this.default_sync_mode) this.default_sync_mode = false   // disable sync after the first time at launch
     })
     app.get('/stream', (req, res, next) => {
       res.flush = () => {}; 
+      const last = req.header('Last-Event-ID')
+      console.log("last", last)
       next();
-    }, this.ipc.sse.init);
+    }, (req, res, next) => {
+      if (this.ipc[req.cookies.session]) {
+        this.ipc[req.cookies.session].sse.init(req, res);
+      } else {
+        next()
+      }
+    })
     app.get("/settings", (req, res) => {
       let authorized = (this.basicauth ? true : false)
+      let session = this.auth(req, res)
       res.render("settings", {
         authorized,
         agent: req.agent,
@@ -107,8 +123,8 @@ class Breadmachine {
         version: this.VERSION,
         machine_version: this.MACHINE_VERSION,
         query: req.query,
-        theme: this.ipc.theme,
-        style: this.ipc.style,
+        theme: this.ipc[session].theme,
+        style: this.ipc[session].style,
       })
     })
     app.get("/help", (req, res) => {
@@ -128,11 +144,12 @@ class Breadmachine {
         icon: "fa-brands fa-github",
         href: "https://github.com/cocktailpeanut/breadboard/issues"
       }]
+      let session = this.auth(req, res)
       res.render("help", {
         agent: req.agent,
         config: this.config.config,
-        theme: this.ipc.theme,
-        style: this.ipc.style,
+        theme: this.ipc[session].theme,
+        style: this.ipc[session].style,
         items,
         platform: process.platform,
         machine_version: this.MACHINE_VERSION,
@@ -140,6 +157,7 @@ class Breadmachine {
       })
     })
     app.get("/connect", (req, res) => {
+      let session = this.auth(req, res)
       res.render("connect", {
         agent: req.agent,
         config: this.config.config,
@@ -147,18 +165,19 @@ class Breadmachine {
         version: this.VERSION,
         machine_version: this.MACHINE_VERSION,
         query: req.query,
-        theme: this.ipc.theme,
-        style: this.ipc.style,
+        theme: this.ipc[session].theme,
+        style: this.ipc[session].style,
       })
     })
     app.get("/favorites", (req, res) => {
+      let session = this.auth(req, res)
       res.render("favorites", {
         agent: req.agent,
         platform: process.platform,
         version: this.VERSION,
         machine_version: this.MACHINE_VERSION,
-        theme: this.ipc.theme,
-        style: this.ipc.style,
+        theme: this.ipc[session].theme,
+        style: this.ipc[session].style,
       })
     })
     app.get('/file', (req, res) => {
@@ -167,7 +186,8 @@ class Breadmachine {
     app.post("/ipc", async (req, res) => {
       let name = req.body.name
       let args = req.body.args
-      let r = await this.ipc.call(req.cookies.session, name, ...args)
+      let session = this.auth(req, res)
+      let r = await this.ipc[session].call(req.cookies.session, name, ...args)
       if (r) {
         res.json(r)
       } else {

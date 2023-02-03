@@ -59,6 +59,9 @@
       <a title="liked items" class='btn' href="/?query=tag:favorite"><i class="fa-solid fa-heart"></i></a>
       <div class='status'></div>
       <input type='search' placeholder='search' class='search flexible'>
+      <div class='divider'></div>
+      <button id='live-option'><i class="fa-solid fa-bolt fa-beat"></i><span>&nbsp&nbsp;LIVE</span></button>
+      <div class='divider'></div>
       <a title='discord' class='btn' target="_blank" href="https://discord.gg/6MJ6MQScnX"><i class="fa-brands fa-discord"></i></a>
       <a title='twitter' class='btn' target="_blank" href="https://twitter.com/cocktailpeanut"><i class="fa-brands fa-twitter"></i></a>
       <a title='help' class='btn' href="/help"><i class="fa-solid fa-clipboard-question"></i></a>
@@ -67,30 +70,14 @@
     </nav>
     <div class='settings'></div>
     <script src="./modules/api.js"></script>
+    <script src="./modules/db.js"></script>
     <script src="./dexie.js"></script>
     <script>
-    let db;
-    let user;
-    let backup;
     const VERSION = "<%=version%>"
     const api = new API()
-    const init_db = async () => {
-      // init data db
-      db = new Dexie("data")
-      db.version(1).stores({
-        files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens",
-      })
-      // init user db
-      user = new Dexie("user")
-      user.version(1).stores({
-        folders: "&name",
-        checkpoints: "&root_path, btime",
-        settings: "key, val",
-        favorites: "query, global"
-      })
-    }
+    const db = new DB(api)
     const init_theme = async () => {
-      let theme = await user.settings.where({ key: "theme" }).first()
+      let theme = await db.user.settings.where({ key: "theme" }).first()
       if (!theme) theme = { val: "default" }
       document.body.className = theme.val
       document.querySelector("html").className = theme.val
@@ -123,7 +110,7 @@
     const renderSettings = async () => {
 
 
-      let res = await user.folders.toArray()
+      let res = await db.user.folders.toArray()
       res = res.map((r) => {
         return r.name
       })
@@ -141,7 +128,7 @@
       let recommended = defaults.filter((item) => {
         return !res.includes(item)
       })
-      let currentZoom = await user.settings.where({ key: "zoom" }).first()
+      let currentZoom = await db.user.settings.where({ key: "zoom" }).first()
       let zoom;
       if (currentZoom) {
         zoom = currentZoom.val
@@ -205,7 +192,7 @@
         let paths = await api.select()
         if (paths && paths.length > 0) {
           for(let name of paths) {
-            await user.folders.put({ name: name })
+            await db.user.folders.put({ name: name })
           }
           location.href = location.href + "?sync_needed=true"
         }
@@ -223,27 +210,27 @@
           if (confirmed) {
             let name = delTarget.getAttribute("data-name")
             // Delete the folder
-            await user.folders.where({ name }).delete()
+            await db.user.folders.where({ name }).delete()
             // Delete all the files in the folder
-            await db.files.where({ root_path: name }).delete()
+            await db.db.files.where({ root_path: name }).delete()
             // Delete the checkpoint
-            await user.checkpoints.where({ root_path: name }).delete()
+            await db.user.checkpoints.where({ root_path: name }).delete()
             location.href = location.href
           }
         } else if (addTarget) {
           e.preventDefault()
           e.stopPropagation()
           let name = addTarget.getAttribute("data-name")
-          await user.folders.put({ name: name })
+          await db.user.folders.put({ name: name })
           location.href = location.href + "?sync_needed=true"
         } else if (reindexTarget) {
           e.preventDefault()
           e.stopPropagation()
           let name = reindexTarget.getAttribute("data-name")
           // Delete all the files in the folder
-          await db.files.where({ root_path: name }).delete()
+          await db.db.files.where({ root_path: name }).delete()
           // Delete the checkpoint
-          await user.checkpoints.where({ root_path: name }).delete()
+          await db.user.checkpoints.where({ root_path: name }).delete()
           location.href = "/?synchronize=reindex_folder&sync_folder="+encodeURIComponent(name)
         } else if (customizeTarget) {
           e.preventDefault()
@@ -264,7 +251,7 @@
       settingsRendered = true
     }
     (async () => {
-      await init_db()
+      await db.init()
       await init_theme()
       await renderSettings()
     })();

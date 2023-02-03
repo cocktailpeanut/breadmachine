@@ -39,9 +39,11 @@ class API {
     }
   }
   listen (callback) {
-    this.es.addEventListener('message', (event) => {
+    const listener = (event) => {
       callback(event, JSON.parse(JSON.parse(event.data)))
-    })
+    }
+    this.es.removeEventListener('message', listener)
+    this.es.addEventListener('message', listener)
   }
   select () {
     return this.request("select")
@@ -89,7 +91,7 @@ class API {
     return isSuccess;
   }
   open (file_path) {
-    if (this.config.agent === "web") {
+    if (this.config && this.config.agent === "web") {
       window.open(`/file?file=${encodeURIComponent(file_path)}`, "_blank")
     } else {
       return this.request("open", file_path)

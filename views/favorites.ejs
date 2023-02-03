@@ -23,6 +23,9 @@
       <a title='liked items' class='btn' href="/?query=tag:favorite"><i class="fa-solid fa-heart"></i></a>
       <div class='status'></div>
       <input type='search' placeholder='search' class='search flexible'>
+      <div class='divider'></div>
+      <button id='live-option'><i class="fa-solid fa-bolt fa-beat"></i><span>&nbsp&nbsp;LIVE</span></button>
+      <div class='divider'></div>
       <a title='discord' class='btn' target="_blank" href="https://discord.gg/6MJ6MQScnX"><i class="fa-brands fa-discord"></i></a>
       <a title='twitter' class='btn' target="_blank" href="https://twitter.com/cocktailpeanut"><i class="fa-brands fa-twitter"></i></a>
       <a title='help' class='btn' href="/help"><i class="fa-solid fa-clipboard-question"></i></a>
@@ -31,25 +34,15 @@
     </nav>
     <div class='favorites'>
     </div>
+    <script src="./modules/api.js"></script>
+    <script src="./modules/db.js"></script>
     <script src="./dexie.js"></script>
     <script>
-    let db;
-    let user;
-    const init_db = async () => {
-      db = new Dexie("data")
-      db.version(1).stores({
-        files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens",
-      })
-      user = new Dexie("user")
-      user.version(1).stores({
-        folders: "&name",
-        checkpoints: "&root_path, btime",
-        settings: "key, val",
-        favorites: "query, global"
-      })
-    }
+    const VERSION = "<%=version%>"
+    const api = new API()
+    const db = new DB(api);
     const init_theme = async () => {
-      let theme = await user.settings.where({ key: "theme" }).first()
+      let theme = await db.user.settings.where({ key: "theme" }).first()
       if (!theme) theme = { val: "default" }
       document.body.className = theme.val
     }
@@ -71,11 +64,11 @@
     }
     const renderFavorites = async () => {
       // global
-      let res = await user.favorites.where("global").equals(1).toArray()
+      let res = await db.user.favorites.where("global").equals(1).toArray()
       let rows = res.map(row).join("")
 
       // non global
-      let res2 = await user.favorites.where("global").notEqual(1).toArray()
+      let res2 = await db.user.favorites.where("global").notEqual(1).toArray()
       let rows2 = res2.map(row).join("")
 
       document.querySelector(".favorites").innerHTML = `<main>
@@ -117,12 +110,12 @@
         let query = globalTarget.getAttribute("data-query") 
         let global = (globalTarget.getAttribute("data-global") === "global")
         let newGlobal = (global ? 0 : 1)
-        await user.favorites.where({ query }).modify({ global: newGlobal })
+        await db.user.favorites.where({ query }).modify({ global: newGlobal })
         location.href = location.href
       }
     });
     (async () => {
-      await init_db()
+      await db.init()
       await init_theme()
       await renderFavorites()
     })();

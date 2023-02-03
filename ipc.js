@@ -7,12 +7,15 @@ const path = require('path')
 const GM = require('./crawler/gm')
 const Diffusionbee = require('./crawler/diffusionbee')
 const Standard = require('./crawler/standard')
+const Listener = require('./listener')
 class IPC {
   handlers = {}
   handle(name, fn) {
     this.handlers[name] = fn
   }
-  constructor(app, config) {
+  constructor(app, session, config) {
+    this.session = session
+    this.listener = new Listener(this, session)
     this.app = app
     this.gm = new GM()
     this.sse = new SSE();
@@ -34,7 +37,12 @@ class IPC {
       }
     }
     this.queue = fastq.promise(async (msg) => {
-      this.sse.send(JSON.stringify(msg))
+      console.log("queue msg", msg)
+      if (msg.params && msg.params.length > 0 && msg.params[0].btime) {
+        this.sse.send(JSON.stringify(msg), null, msg.params[0].btime)
+      } else {
+        this.sse.send(JSON.stringify(msg))
+      }
     }, 1)
     this.ipc.handle("theme", (session, _theme) => {
       this.theme = _theme
@@ -43,8 +51,7 @@ class IPC {
       this.style = _style
     })
     this.ipc.handle('subscribe', async (session, folderpaths) => {
-      this.app.listener.subscribe({
-        session,
+      this.listener.subscribe({
         name: "folders",
         args: folderpaths
       })

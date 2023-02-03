@@ -343,10 +343,10 @@ function find (phrase) {
   });
 }
 addEventListener("message", async event => {
-  let { query, sorter, offset } = event.data;
+  let { query, sorter, offset, limit, options } = event.data;
   let res = []
 
-  let LIMIT = 500
+  let LIMIT = limit
 
   // Global filter application
   let globalQueries = await user.favorites.where({ global: 1 }).toArray()
@@ -389,12 +389,14 @@ addEventListener("message", async event => {
         })
       }
     }
+
     count = res.length
     if (count > offset * LIMIT) {
       res = res.slice(offset * LIMIT, (offset+1) * LIMIT)
     } else {
       res = []
     }
+
   } else {
     if (sorter.direction > 0) {
       res = await db.files.orderBy(sorter.column).offset(offset * LIMIT).limit(LIMIT).toArray()
@@ -403,5 +405,19 @@ addEventListener("message", async event => {
     }
     count = await db.files.count()
   }
-  postMessage({ res, count })
+
+  // if there's a checkpoint,
+  // after sorting, remove everything that's after the reference item (as well as the reference item)
+  if (options && options.checkpoint && options.prepend) {
+    for(let i=0; i<res.length; i++) {
+      let item = res[i]
+      console.log("checkpoint", options.checkpoint)
+      if (item[sorter.column].toString() === options.checkpoint.toString()) {
+        res = res.slice(0, i)
+        break;
+      }
+    }
+  }
+
+  postMessage({ res, count, options })
 });
