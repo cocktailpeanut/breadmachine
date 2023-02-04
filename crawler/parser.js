@@ -238,6 +238,12 @@ class Parser {
       x["dc:subject"] = e.Subject
     }
 
+    if (options && options.aesthetic_score) {
+      x["xmp:aesthetic_score"] = parseFloat(options.aesthetic_score)
+    } else if (e.aesthetic_score) {
+      x["xmp:aesthetic_score"] = parseFloat(e.aesthetic_score)
+    }
+
     let keys = [
       "xmp:prompt",
       "xmp:sampler",
@@ -251,6 +257,7 @@ class Parser {
       "xmp:agent",
       "xmp:width",
       "xmp:height",
+      "xmp:aesthetic_score",
       "dc:subject",
     ]
 
@@ -268,7 +275,7 @@ class Parser {
   }
   applyType(item) {
     let integers = ["xmp:steps", "xmp:seed", "xmp:width", "xmp:height"]
-    let floats = ["xmp:cfg_scale"]
+    let floats = ["xmp:cfg_scale", "xmp:aesthetic_score"]
     if (integers.includes(item.key)) {
       return parseInt(item.val)
     }

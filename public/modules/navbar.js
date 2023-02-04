@@ -48,6 +48,14 @@ class Navbar {
       direction: 1,
       column: "height",
       compare: 0, // numeric compare
+    }, {
+      direction: -1,
+      column: "aesthetic_score",
+      compare: 0, // numeric compare
+    }, {
+      direction: 1,
+      column: "aesthetic_score",
+      compare: 0, // numeric compare
     }]
     this.sorter = this.sorters[this.app.sorter_code]
     this.sorter_code = parseInt(this.app.sorter_code)
@@ -95,6 +103,11 @@ class Navbar {
       if (e.key === "Enter") {
         this.app.search(e.target.value)
       }
+    })
+    document.querySelector("#show-menu").addEventListener('click', async (e) => {
+      document.querySelectorAll(".nav-child").forEach((el) => {
+        el.classList.toggle("shown")
+      })
     })
 
   }

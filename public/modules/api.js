@@ -9,6 +9,9 @@ class API {
   subscribe (folderpaths) {
     return this.request('subscribe', folderpaths)
   }
+  pin (pin) {
+    return this.request("pin", pin)
+  }
   del (filenames) {
     if (Array.isArray(filenames)) {
       return this.request("del", filenames)

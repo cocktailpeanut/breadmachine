@@ -59,6 +59,7 @@ class GM {
       "xmp:agent",
       "xmp:width",
       "xmp:height",
+      "xmp:aesthetic_score",
       "dc:subject",
     ]
 
@@ -195,6 +196,7 @@ class GM {
         "xmp:model_url",
         "xmp:agent",
         "xmp:width",
+        "xmp:aesthetic_score",
         "xmp:height",
       ]
 

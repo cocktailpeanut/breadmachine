@@ -61,7 +61,7 @@ const card = (meta, stripPunctuation, recycle) => {
         els.push(`<span class='token' data-value="${token}">${token}</span>`)
       }
       el = els.join("/")
-    } else if (attr.key === "width" || attr.key === "height" || attr.key === "seed" || attr.key === "cfg_scale" || attr.key === "steps") {
+    } else if (attr.key === "width" || attr.key === "height" || attr.key === "seed" || attr.key === "cfg_scale" || attr.key === "steps" || attr.key === "aesthetic_score") {
       el = `<span class='token' data-value="${attr.val}">${attr.val}</span>`
     } else {
       el = attr.val

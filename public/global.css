@@ -24,6 +24,13 @@ body {
   outline: none;
   overflow: auto;
 }
+#pin {
+  width: auto;
+  font-size: 13px;
+  line-height: 18px;
+  text-transform: uppercase;
+  font-weight: 100;
+}
 #live-option.bold {
   font-weight: bold;
   opacity: 1;
@@ -153,8 +160,8 @@ body.dark .empty-container {
   background: white;
   box-sizing: border-box;
   align-items: flex-start;
-  outline: 1px solid rgba(0,0,0,0.05);
-  outline-offset: -1px;
+  outline: 1px solid rgba(0,0,0,0.1);
+  outline-offset: -2px;
   overflow-wrap: break-word;
   word-wrap: break-word;
   -ms-word-break: break-all;
@@ -242,7 +249,7 @@ body.dark .empty-container {
   user-select: auto;
 }
 .card.expanded td {
-  font-size: 0.8rem;
+  font-size: 1rem;
   padding: 3px;
 }
 .card.expanded td.attr-val {
@@ -457,6 +464,12 @@ tr button.edit-tags, tr button.open-file {
 nav {
   padding: 5px 10px;
 }
+nav.minimized #minimize {
+  flex-grow: 1;
+}
+nav.minimized > :not(#minimize) {
+  display: none;
+}
 nav {
   position: -webkit-sticky;
   position: sticky;
@@ -465,6 +478,19 @@ nav {
   align-items: center;
   box-sizing: border-box;
   z-index: 10000;
+  flex-wrap: wrap;
+}
+nav .nav-child {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+nav .nav-line {
+  display: flex;
+  align-items: center;
+}
+.nav-child button {
+  padding: 0;
 }
 nav select {
   padding: 10px 10px 10px 0;
@@ -849,9 +875,11 @@ footer > * {
   border: none;
   text-transform: uppercase;
 }
+/*
 .ts-wrapper {
   margin: 0 20px 0 0;
 }
+*/
 .ts-dropdown {
   text-transform: uppercase;
 }
@@ -891,6 +919,9 @@ nav #notification {
   background: royalblue !important;
   color: white !important;
   border: none !important;
+}
+#show-menu {
+  display: none;
 }
 
 
@@ -1078,8 +1109,8 @@ body.dark nav input {
   color: white;
 }
 body.dark .card {
-  outline: 1px solid rgba(255,255,255,0.02);
-  outline-offset: -1px;
+  outline: 1px solid rgba(255,255,255,0.1);
+  outline-offset: -2px;
   background: none;
   color: rgba(255,255,255,0.9);
 }
@@ -1149,4 +1180,33 @@ body.dark .settings a.link {
 }
 body.dark tr button.copy-text {
   color: white;
+}
+
+
+@media screen and (max-width: 1200px) {
+  nav .nav-child {
+    display: none;
+  }
+  nav button#favorite {
+    margin: 0;
+  }
+  nav .nav-child.shown {
+    display: flex;
+    width: 100%;
+  }
+  nav .nav-child.misc-links {
+    margin: 10px 0;
+  }
+  nav .nav-child .divider {
+    display: none;
+  }
+  nav .nav-child .nav-line {
+    width: 100%;
+  }
+  nav .nav-child a {
+    display: flex;
+  }
+  #show-menu {
+    display: block;
+  }
 }

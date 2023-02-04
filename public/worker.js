@@ -10,7 +10,7 @@ importScripts("./dexie.js")
 var db = new Dexie("data")
 var user = new Dexie("user")
 db.version(2).stores({
-  files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens, seed, cfg_scale, steps",
+  files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens, seed, cfg_scale, steps, aesthetic_score",
 })
 user.version(1).stores({
   folders: "&name",
@@ -40,6 +40,9 @@ function applyFilter(q, filters) {
     }, {
       key: "steps",
       type: "int",
+    }, {
+      key: "aesthetic_score",
+      type: "float",
     }]
     for(let filter of filters) {
       if (filter.before) {
@@ -256,6 +259,9 @@ function find (phrase) {
   }, {
     key: "steps",
     type: "int",
+  }, {
+    key: "aesthetic_score",
+    type: "float"
   }]
   for(let prefix of prefixes) {
     if (prefix.startsWith("before:")) {

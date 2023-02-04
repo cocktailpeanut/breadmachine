@@ -34,10 +34,10 @@ class DB {
       this.live = true
     }
     if (this.live) {
-      document.querySelector("#live-option i").classList.add("fa-beat")
+      document.querySelector("#live-option i").classList.add("fa-spin")
       document.querySelector("#live-option").classList.add("bold")
     } else {
-      document.querySelector("#live-option i").classList.remove("fa-beat")
+      document.querySelector("#live-option i").classList.remove("fa-spin")
       document.querySelector("#live-option").classList.remove("bold")
     }
     document.querySelector("#live-option span").innerHTML = `&nbsp;&nbsp;LIVE ${this.live ? "ON" : "OFF"}`
@@ -46,10 +46,10 @@ class DB {
       await this.user.settings.put({ key: "live", val: this.live })
       document.querySelector("#live-option span").innerHTML = `&nbsp;&nbsp;LIVE ${this.live ? "ON" : "OFF"}`
       if (this.live) {
-        document.querySelector("#live-option i").classList.add("fa-beat")
+        document.querySelector("#live-option i").classList.add("fa-spin")
         document.querySelector("#live-option").classList.add("bold")
       } else {
-        document.querySelector("#live-option i").classList.remove("fa-beat")
+        document.querySelector("#live-option i").classList.remove("fa-spin")
         document.querySelector("#live-option").classList.remove("bold")
       }
     })
@@ -87,7 +87,7 @@ class DB {
     // 1. The "data" DB only contains attributes that can be crawled from the files
     this.db = new Dexie("data")
     this.db.version(2).stores({
-      files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens, seed, cfg_scale, steps",
+      files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens, seed, cfg_scale, steps, aesthetic_score",
     })
 
     // 2. The "user" DB contains attributes that can NOT be crawled from the files

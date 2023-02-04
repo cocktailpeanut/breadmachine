@@ -30,10 +30,10 @@ class App {
     }
     document.querySelector("#live-option span").innerHTML = `&nbsp;&nbsp;LIVE ${this.live ? "ON" : "OFF"}`
     if (this.live) {
-      document.querySelector("#live-option i").classList.add("fa-beat")
+      document.querySelector("#live-option i").classList.add("fa-spin")
       document.querySelector("#live-option").classList.add("bold")
     } else {
-      document.querySelector("#live-option i").classList.remove("fa-beat")
+      document.querySelector("#live-option i").classList.remove("fa-spin")
       document.querySelector("#live-option").classList.remove("bold")
     }
     document.querySelector("#live-option").addEventListener("click", async (e) => {
@@ -41,10 +41,10 @@ class App {
       await this.user.settings.put({ key: "live", val: this.live })
       document.querySelector("#live-option span").innerHTML = `&nbsp;&nbsp;LIVE ${this.live ? "ON" : "OFF"}`
       if (this.live) {
-        document.querySelector("#live-option i").classList.add("fa-beat")
+        document.querySelector("#live-option i").classList.add("fa-spin")
         document.querySelector("#live-option").classList.add("bold")
       } else {
-        document.querySelector("#live-option i").classList.remove("fa-beat")
+        document.querySelector("#live-option i").classList.remove("fa-spin")
         document.querySelector("#live-option").classList.remove("bold")
       }
     })
@@ -62,7 +62,11 @@ class App {
 //      }
 //    })
     await this.init_db()
+    if (this.api.config.agent === "electron") {
+      await this.init_pin()
+    }
     this.init_rpc()
+    this.init_minimize()
     await this.bootstrap()
   }
   async init_db () {
@@ -70,7 +74,7 @@ class App {
     // 1. The "data" DB only contains attributes that can be crawled from the files
     this.db = new Dexie("data")
     this.db.version(2).stores({
-      files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens, seed, cfg_scale, steps",
+      files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens, seed, cfg_scale, steps, aesthetic_score",
     })
 
     // 2. The "user" DB contains attributes that can NOT be crawled from the files
@@ -277,20 +281,27 @@ class App {
           if (this.live) {
             for(let meta of value.params) {
               queueMicrotask(async () => {
+                console.log("INSERT", meta)
                 let response = await this.insert(meta, { silent: true }).catch((e) => {
                   console.log("ERROR", e)
                 })
-                let checkpoint = document.querySelector(`.card:first-child tr[data-key='${this.navbar.sorter.column}'] .copy-text`).getAttribute("data-value")
-                this.worker.postMessage({
-                  query: this.query,
-                  sorter: this.navbar.sorter,
-                  offset: 0,
-                  limit: 10,
-                  options: {
-                    checkpoint,
-                    prepend: true  
-                  }
-                })
+                let x = document.querySelector(`.card`)
+                console.log("x", x)
+                let first = document.querySelector(`.card tr[data-key='${this.navbar.sorter.column}'] .copy-text`)
+                console.log("first", first)
+                if (first) {
+                  let checkpoint = first.getAttribute("data-value")
+                  this.worker.postMessage({
+                    query: this.query,
+                    sorter: this.navbar.sorter,
+                    offset: 0,
+                    limit: 10,
+                    options: {
+                      checkpoint,
+                      prepend: true  
+                    }
+                  })
+                }
               })
             }
           }
@@ -311,6 +322,41 @@ class App {
         })
       }
     })
+  }
+  init_minimize() {
+    document.querySelector("#minimize").addEventListener("click", async (e) => {
+      document.querySelector("#minimize i").classList.toggle("fa-angles-up")
+      document.querySelector("#minimize i").classList.toggle("fa-angles-down")
+      e.target.closest("nav").classList.toggle("minimized")
+    })
+  }
+  async init_pin() {
+    console.log("init pinned")
+    if (this.api.config && this.api.config.agent === "electron") {
+
+      let r = await this.user.settings.where({ key: "pinned" }).first()
+      if (r) {
+        this.pinned = r.val 
+      } else {
+        this.pinned = false
+      }
+      console.log("this.pinned", this.pinned)
+      this.api.pin(this.pinned)
+      if (this.pinned) {
+        document.querySelector("#pin span").innerHTML = "&nbsp;&nbsp;Pinned"
+      } else {
+        document.querySelector("#pin span").innerHTML = "&nbsp;&nbsp;Pin"
+      }
+
+      document.querySelector("#pin").addEventListener("click", async (e) => {
+        let old = this.pinned;
+        await this.user.settings.put({ key: "pinned", val: !old })
+        await this.init_pin()
+      }, { once: true })
+
+    } else {
+      console.log("not electron, don't do it")
+    }
   }
   async init_zoom () {
     let zoom = await this.user.settings.where({ key: "zoom" }).first()
@@ -348,17 +394,28 @@ class App {
     if (!this.worker) {
       this.worker = new Worker("./worker.js")
       this.worker.onmessage = async (e) => {
+        console.log("e.data", e.data)
         if (e.data.options) {
           if (e.data.options.prepend) {
+            document.querySelector(".content-info").innerHTML = `<i class="fa-solid fa-check"></i> ${e.data.count}`
             if (e.data.res.length > 0) {
-              document.querySelector(".content-info").innerHTML = `<i class="fa-solid fa-check"></i> ${e.data.count}`
               let data = e.data.res.map((item) => {
                 return `<div class='card' data-root="${item.root_path}" data-src="${item.file_path}">${card(item, this.stripPunctuation, this.style.recycle)}</div>`
               })
               if (this.style.recycle) {
+                let expanded = document.querySelectorAll(".expanded")
+                let srcs = []
+                for(let el of expanded) {
+                  srcs.push(el.getAttribute("data-src"))
+                }
+                console.log("expanded", srcs)
                 this.clusterize.prepend([data])
+
                 setTimeout(() => {
                   this.clusterize.refresh(true)
+                  for(let src of srcs) {
+                    document.querySelector(`.card[data-src='${src}']`).classList.add("expanded")
+                  }
                 }, 100)
               } else {
                 let fragment = document.createDocumentFragment();
