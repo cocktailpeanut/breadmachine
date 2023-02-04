@@ -84,7 +84,6 @@ class Breadmachine {
         this.current_sorter_code = req.query.sorter_code
       }
       let session = this.auth(req, res)
-      console.log("style", this.ipc[session].style)
       res.render("index", {
         agent: req.agent,
         platform: process.platform,
@@ -103,7 +102,6 @@ class Breadmachine {
     app.get('/stream', (req, res, next) => {
       res.flush = () => {}; 
       const last = req.header('Last-Event-ID')
-      console.log("last", last)
       next();
     }, (req, res, next) => {
       if (this.ipc[req.cookies.session]) {
@@ -132,7 +130,7 @@ class Breadmachine {
         name: "discord",
         description: "ask questions and share feedback",
         icon: "fa-brands fa-discord",
-        href: "https://discord.gg/6MJ6MQScnX"
+        href: "https://discord.gg/XahBUrbVwz"
       }, {
         name: "twitter",
         description: "stay updated on Twitter",

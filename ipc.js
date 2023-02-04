@@ -37,7 +37,6 @@ class IPC {
       }
     }
     this.queue = fastq.promise(async (msg) => {
-      console.log("queue msg", msg)
       if (msg.params && msg.params.length > 0 && msg.params[0].btime) {
         this.sse.send(JSON.stringify(msg), null, msg.params[0].btime)
       } else {
