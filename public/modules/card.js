@@ -89,8 +89,9 @@ const card = (meta, stripPunctuation, recycle) => {
 
   return `<div class='grab' draggable='true'>
 <button title='like this item' data-favorited="${is_favorited}" data-src="${meta.file_path}" class='favorite-file'><i class="${favClass}"></i></button>
-<button title='get the source file' data-src="${meta.file_path}" class='open-file'><i class="fa-regular fa-folder-open"></i></button>
-<button title='view in full screen' class='gofullscreen'><i class="fa-solid fa-eye"></i></button>
+<button title='raw file' data-src="${meta.file_path}" class='open-file'><i class="fa-regular fa-folder-open"></i></button>
+<button title='image viewer' class='gofullscreen'><i class="fa-solid fa-eye"></i></button>
+<button title='pop out to a new window' class='popup' data-src="/card?file=${encodeURIComponent(meta.file_path)}"><i class="fa-solid fa-up-right-from-square"></i></button>
 </div>
 <div class='row'>
   <img loading='${recycle ? "eager" : "lazy"}' data-root="${meta.root_path}" data-src="${meta.file_path}" src="/file?file=${encodeURIComponent(meta.file_path)}">

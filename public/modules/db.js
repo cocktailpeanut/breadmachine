@@ -7,8 +7,6 @@ class DB {
     await this.init_db()
     await this.init_live()
     this.api.listen(async (_event, value) => {
-      console.log("live mode", this.live)
-      console.log("value", value)
       if (this.live) {
         if (value.method) {
           if (value.method === "new") {
@@ -25,6 +23,19 @@ class DB {
         }
       }
     })
+    this.init_nav()
+  }
+  init_nav() {
+    let buttons = ["#prev", "#next", "#sync", ".content-info", "#favorite", "#bookmarked-filters", "#favorited-items", "#view-option", "#live-option", "#pin", "#notification", "#settings-option", "#help-option", "#new-window"]
+    for(let button of buttons) {
+      let el = document.querySelector(button)
+      if (el) {
+        tippy(el, {
+          interactive: true,
+          content: el.getAttribute("title")
+        });
+      }
+    }
   }
   async init_live() {
     let live = await this.user.settings.where({ key: "live" }).first()
@@ -36,29 +47,76 @@ class DB {
     if (this.live) {
       document.querySelector("#live-option i").classList.add("fa-spin")
       document.querySelector("#live-option").classList.add("bold")
+      document.querySelector("#live-option").classList.add("active")
     } else {
       document.querySelector("#live-option i").classList.remove("fa-spin")
       document.querySelector("#live-option").classList.remove("bold")
+      document.querySelector("#live-option").classList.remove("active")
     }
-    document.querySelector("#live-option span").innerHTML = `&nbsp;&nbsp;LIVE ${this.live ? "ON" : "OFF"}`
-    document.querySelector("#live-option").addEventListener("click", async (e) => {
-      this.live = !this.live 
-      await this.user.settings.put({ key: "live", val: this.live })
-      document.querySelector("#live-option span").innerHTML = `&nbsp;&nbsp;LIVE ${this.live ? "ON" : "OFF"}`
-      if (this.live) {
-        document.querySelector("#live-option i").classList.add("fa-spin")
-        document.querySelector("#live-option").classList.add("bold")
-      } else {
-        document.querySelector("#live-option i").classList.remove("fa-spin")
-        document.querySelector("#live-option").classList.remove("bold")
+
+    tippy(document.querySelector("#live-option"), {
+      interactive: true,
+      trigger: "click",
+      allowHTML: true,
+      placement: "bottom-end",
+      content: `<div class='menu-popup'>
+      <div class='menu-item play-option'><i class="fa-solid ${this.live ? 'fa-pause' : 'fa-play'}"></i><span>${this.live ? 'pause' : 'play'}</span></div>
+      <hr>
+      <div class='menu-item sound-option'><i class="fa-solid ${this.sound ? 'fa-volume-xmark' : 'fa-volume-high'}"></i><span>${this.sound ? 'turn off sound' : 'turn on sound'}</span></div>
+</div>`,
+      onHidden: (instance) => {
+        instance.popper.querySelector(".play-option").removeEventListener("click", instance.extended_handlers.liveHandler)
+        instance.popper.querySelector(".sound-option").removeEventListener("click", instance.extended_handlers.soundHandler)
+      },
+      onShown: (instance) => {
+        const liveHandler = async (e) => {
+          this.live = !this.live 
+          await this.user.settings.put({ key: "live", val: this.live })
+          if (this.live) {
+            document.querySelector("#live-option i").classList.add("fa-spin")
+            document.querySelector("#live-option").classList.add("bold")
+            document.querySelector("#live-option").classList.add("active")
+            instance.popper.querySelector(".play-option i").classList.remove("fa-play")
+            instance.popper.querySelector(".play-option i").classList.add("fa-pause")
+            instance.popper.querySelector(".play-option span").innerHTML = "pause"
+          } else {
+            document.querySelector("#live-option i").classList.remove("fa-spin")
+            document.querySelector("#live-option").classList.remove("bold")
+            document.querySelector("#live-option").classList.remove("active")
+            instance.popper.querySelector(".play-option i").classList.remove("fa-pause")
+            instance.popper.querySelector(".play-option i").classList.add("fa-play")
+            instance.popper.querySelector(".play-option span").innerHTML = "play"
+          }
+        }
+        const soundHandler = async (e) => {
+          this.sound = !this.sound
+          await this.user.settings.put({ key: "sound", val: this.sound })
+          if (this.sound) {
+            instance.popper.querySelector(".sound-option i").classList.remove("fa-volume-high")
+            instance.popper.querySelector(".sound-option i").classList.add("fa-volume-xmark")
+            instance.popper.querySelector(".sound-option span").innerHTML = "turn off sound"
+          } else {
+            instance.popper.querySelector(".sound-option i").classList.remove("fa-volume-xmark")
+            instance.popper.querySelector(".sound-option i").classList.add("fa-volume-high")
+            instance.popper.querySelector(".sound-option span").innerHTML = "turn on sound"
+          }
+        }
+        instance.popper.querySelector(".play-option").addEventListener("click", liveHandler)
+        instance.popper.querySelector(".sound-option").addEventListener("click", soundHandler)
+        instance.extended_handlers = {
+          liveHandler,
+          soundHandler
+        }
       }
-    })
+    });
   }
   notify() {
-    if (!this.notify_audio) {
-      this.notify_audio = new Audio('pop.mp3');
+    if (this.sound) {
+      if (!this.notify_audio) {
+        this.notify_audio = new Audio('pop.mp3');
+      }
+      this.notify_audio.play();
     }
-    this.notify_audio.play();
   }
   async insert (o) {
     let tokens = []

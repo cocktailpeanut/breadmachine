@@ -8,6 +8,7 @@ class Handler {
       e.stopPropagation()
       let colTarget = (e.target.classList.contains(".col") ? e.target : e.target.closest(".col"))
       let fullscreenTarget = (e.target.classList.contains(".gofullscreen") ? e.target : e.target.closest(".gofullscreen"))
+      let popupTarget = (e.target.classList.contains(".popup") ? e.target : e.target.closest(".popup"))
       let clipboardTarget = (e.target.classList.contains(".copy-text") ? e.target : e.target.closest(".copy-text"))
       let tokenTarget = (e.target.classList.contains(".token") ? e.target : e.target.closest(".token"))
       let tokenPopupTarget = (e.target.classList.contains(".popup-link") ? e.target : e.target.closest(".popup-link"))
@@ -41,6 +42,8 @@ class Handler {
         this.viewer.show()
       } else if (openFileTarget) {
         this.api.open(openFileTarget.getAttribute("data-src"))
+      } else if (popupTarget) {
+        window.open(popupTarget.getAttribute("data-src"), "_blank", "popup,width=512")
       } else if (favoriteFileTarget) {
         let data_favorited = favoriteFileTarget.getAttribute("data-favorited")
         let is_favorited = (data_favorited === "true" ? true : false)
@@ -91,9 +94,12 @@ class Handler {
 
         await this.app.synchronize([{ file_path: src, root_path: root }], async () => {
           document.querySelector(".status").innerHTML = ""
-          document.querySelector("#sync").classList.remove("disabled")
-          document.querySelector("#sync").disabled = false
-          document.querySelector("#sync i").classList.remove("fa-spin")
+          let sync_button = document.querySelector("#sync")
+          if (sync_button) {
+            sync_button.classList.remove("disabled")
+            sync_button.disabled = false
+            document.querySelector("#sync i").classList.remove("fa-spin")
+          }
         })
       } else if (grabTarget) {
       } else if (tokenTarget && e.target.closest(".card.expanded")) {
@@ -184,6 +190,11 @@ class Handler {
       } else {
         let target = (e.target.classList.contains("card") ? e.target : e.target.closest(".card"))
         if (target) {
+          // don't make popup cards expandable
+          if (target.classList.contains("popup-card")) {
+            window.close()
+            return
+          }
           target.classList.toggle("expanded")
           if (target.classList.contains("expanded")) {
             let img = target.querySelector("img").cloneNode()

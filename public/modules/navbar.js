@@ -59,6 +59,9 @@ class Navbar {
     }]
     this.sorter = this.sorters[this.app.sorter_code]
     this.sorter_code = parseInt(this.app.sorter_code)
+    document.querySelector("#new-window").addEventListener("click", (e) => {
+      window.open("/", "_blank", "popup")
+    })
     document.querySelector("#prev").addEventListener("click", (e) => {
       history.back()
     })
@@ -109,6 +112,20 @@ class Navbar {
         el.classList.toggle("shown")
       })
     })
+
+
+    let buttons = ["#prev", "#next", "#sync", ".content-info", "#favorite", "#bookmarked-filters", "#favorited-items", "#view-option", "#live-option", "#pin", "#notification", "#settings-option", "#help-option", "#new-window"]
+    for(let button of buttons) {
+      let el = document.querySelector(button)
+      if (el) {
+        tippy(el, {
+          interactive: true,
+          //placement: "bottom-end",
+          content: el.getAttribute("title")
+        });
+      }
+    }
+
 
   }
   preprocess_query (phrase) {
@@ -345,7 +362,6 @@ class Navbar {
       allowHTML: true,
       onShown: () => {
         document.querySelector(`#${this.app.style.fit}-mode`).checked = "checked"
-        console.log("style", this.app.style)
         if (this.app.style.recycle) {
           document.querySelector("#recycled-view-check").checked = "checked"
         } else {

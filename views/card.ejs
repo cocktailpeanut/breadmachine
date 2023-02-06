@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>breadboard</title>
+    <link href="/css/fontawesome.min.css" rel="stylesheet">
+    <link href="/css/solid.min.css" rel="stylesheet">
+    <link href="/css/regular.min.css" rel="stylesheet">
+    <link href="/css/brands.min.css" rel="stylesheet">
+    <link href="./global.css" rel="stylesheet" />
+    <% if (agent === "electron") { %>
+    <link href="./electron.css" rel="stylesheet" />
+    <% } %>
+  </head>
+  <body class="<%=theme%>" data-style="<%=style%>">
+    <nav><div class='status'></div></nav>
+    <div class='pop container'></div>
+    <script src="./modules/api.js"></script>
+    <script src="./modules/db.js"></script>
+    <script src="./modules/card.js"></script>
+    <script src="./modules/handler.js"></script>
+    <script src="./timeago.js"></script>
+    <script src="./dexie.js"></script>
+    <script src='./popper.js'></script>
+    <script src="./tippy.js"></script>
+    <script src="./viewer.js"></script>
+    <script>
+      const VERSION = "<%=version%>"
+      const init_theme = async () => {
+        let theme = await db.user.settings.where({ key: "theme" }).first()
+        if (!theme) theme = { val: "default" }
+        document.body.className = theme.val
+        document.querySelector("html").className = theme.val
+        api.theme(theme.val)
+      }
+      const api = new API()
+      const app = {
+        stripPunctuation: (str) => {
+          return str
+            .replaceAll("&quot;", " ")
+            .replace(/[.,\/#!$%\^&\*;:\[\]{}=\-_`"~()\\\|+]/g, " ")
+            .replace(/\s{2,}/g, " ");
+        },
+        synchronize: async (paths, cb) => {
+          document.querySelector(".status").innerHTML = "synchronizing..."
+          app.sync_counter = 0
+          app.sync_complete = false
+          await new Promise((resolve, reject) => {
+            api.sync({ paths })
+            let interval = setInterval(() => {
+              if (app.sync_complete) {
+                clearInterval(interval)
+                resolve()
+              }
+            }, 1000)
+          })
+          if (cb) {
+            await cb()
+          }
+        },
+        navbar: {
+          input: (key, val) => {
+
+            // find prompt search tokens (no :)
+            let existingPromptTokens = []
+            let existingAdvancedTokens = []
+
+            let t = []
+
+
+            if (key === "prompt" || key === "-prompt") {
+              // 2. if the 'key' filter is 'prompt'
+                // find whether the 'val' is included in the existingPromptTokens array
+                // if it is included, don't do anything
+                // if it's not included, append it to existingPromptTokens array
+              let exists
+              // tag: doesn't need to be cleaned. only search keywords need to be cleaned
+              let istag = /^-?tag:/.test(val)
+              let cleaned = (istag ? val : app.stripPunctuation(val))
+              for(let i=0; i<existingPromptTokens.length; i++) {
+                let token = existingPromptTokens[i]
+                if (token === cleaned) {
+                  exists = true
+                }
+              }
+              if (key === "-prompt") {
+                if (istag) {
+                  existingPromptTokens.push(cleaned)
+                } else {
+                  existingPromptTokens.push("-:" + cleaned)
+                }
+              } else {
+                existingPromptTokens.push(cleaned)
+              }
+            } else {
+              // 3. if the 'key' filter is not 'prompt'
+                // find whether the existingAdvancedTokens array contains any of the 'key' filter
+                // if it does, replace the existingAdvancedTokens array with the new 'key' filter
+                // if it doesn't, append the 'key' filter to the end of the existingAdvancedTokens array
+              let exists
+              for(let i=0; i<existingAdvancedTokens.length; i++) {
+                let token = existingAdvancedTokens[i]
+                if (token.startsWith(key + ":")) {
+                  existingAdvancedTokens[i] = key + ":" + val
+                  exists = true
+                }
+              }
+              if (!exists) {
+                existingAdvancedTokens.push(key + ":" + val) 
+              }
+            }
+
+
+
+            let result = []
+            for(let token of existingPromptTokens) {
+              result.push(token)
+            }
+            for(let token of existingAdvancedTokens) {
+              result.push(token)
+            }
+
+            // there's a change. re render
+            let query = result.join(" ")
+
+            let params = new URLSearchParams({})
+            if (query && query.length > 0) {
+              params.set("query", query)
+              location.href = "/?" + params.toString()
+            }
+
+          }
+        }
+      }
+      const handler = new Handler(app, api);
+      const db = new DB(api);
+      (async () => {
+        await db.init_db();
+        await init_theme()
+        let item = await db.db.files.where({
+          file_path: "<%=file_path%>"
+        }).first()
+        console.log("item", item)
+        let html = `<div class='card expanded popup-card' data-root="${item.root_path}" data-src="${item.file_path}">${card(item, app.stripPunctuation)}</div>`
+        document.querySelector(".container").innerHTML = html
+        api.listen(async (_event, value) => {
+          if (!value.method) {
+            queueMicrotask(async () => {
+              if (value.meta) {
+                let response = await db.insert(value.meta).catch((e) => {
+                  console.log("ERROR", e)
+                })
+              }
+              app.sync_counter++;
+              if (app.sync_counter === value.total) {
+                app.sync_complete = true
+              }
+            })
+          }
+        })
+      })();
+    </script>
+  </body>
+  </body>
+</html>

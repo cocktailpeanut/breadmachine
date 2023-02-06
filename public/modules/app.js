@@ -19,35 +19,90 @@ class App {
       });
     }
     this.domparser = new DOMParser()
+    hotkeys("ctrl+t,cmd+t,ctrl+n,cmd+n", (e) => {
+      window.open("/", "_blank", "popup")
+    })
   }
   async init_live() {
     let live = await this.user.settings.where({ key: "live" }).first()
-    console.log("live", live)
+    let sound = await this.user.settings.where({ key: "sound" }).first()
     if (live) {
       this.live = live.val
     } else {
       this.live = true
     }
-    document.querySelector("#live-option span").innerHTML = `&nbsp;&nbsp;LIVE ${this.live ? "ON" : "OFF"}`
+    if (sound) {
+      this.sound = sound.val
+    } else {
+      this.sound = true
+    }
     if (this.live) {
       document.querySelector("#live-option i").classList.add("fa-spin")
       document.querySelector("#live-option").classList.add("bold")
+      document.querySelector("#live-option").classList.add("active")
     } else {
       document.querySelector("#live-option i").classList.remove("fa-spin")
       document.querySelector("#live-option").classList.remove("bold")
+      document.querySelector("#live-option").classList.remove("active")
     }
-    document.querySelector("#live-option").addEventListener("click", async (e) => {
-      this.live = !this.live 
-      await this.user.settings.put({ key: "live", val: this.live })
-      document.querySelector("#live-option span").innerHTML = `&nbsp;&nbsp;LIVE ${this.live ? "ON" : "OFF"}`
-      if (this.live) {
-        document.querySelector("#live-option i").classList.add("fa-spin")
-        document.querySelector("#live-option").classList.add("bold")
-      } else {
-        document.querySelector("#live-option i").classList.remove("fa-spin")
-        document.querySelector("#live-option").classList.remove("bold")
+
+
+    tippy(document.querySelector("#live-option"), {
+      interactive: true,
+      trigger: "click",
+      allowHTML: true,
+      placement: "bottom-end",
+      content: `<div class='menu-popup'>
+      <div class='menu-item play-option'><i class="fa-solid ${this.live ? 'fa-pause' : 'fa-play'}"></i><span>${this.live ? 'pause' : 'play'}</span></div>
+      <hr>
+      <div class='menu-item sound-option'><i class="fa-solid ${this.sound ? 'fa-volume-xmark' : 'fa-volume-high'}"></i><span>${this.sound ? 'turn off sound' : 'turn on sound'}</span></div>
+</div>`,
+      onHidden: (instance) => {
+        instance.popper.querySelector(".play-option").removeEventListener("click", instance.extended_handlers.liveHandler)
+        instance.popper.querySelector(".sound-option").removeEventListener("click", instance.extended_handlers.soundHandler)
+      },
+      onShown: (instance) => {
+        const liveHandler = async (e) => {
+          this.live = !this.live 
+          await this.user.settings.put({ key: "live", val: this.live })
+          if (this.live) {
+            document.querySelector("#live-option i").classList.add("fa-spin")
+            document.querySelector("#live-option").classList.add("bold")
+            document.querySelector("#live-option").classList.add("active")
+            instance.popper.querySelector(".play-option i").classList.remove("fa-play")
+            instance.popper.querySelector(".play-option i").classList.add("fa-pause")
+            instance.popper.querySelector(".play-option span").innerHTML = "pause"
+          } else {
+            document.querySelector("#live-option i").classList.remove("fa-spin")
+            document.querySelector("#live-option").classList.remove("bold")
+            document.querySelector("#live-option").classList.remove("active")
+            instance.popper.querySelector(".play-option i").classList.remove("fa-pause")
+            instance.popper.querySelector(".play-option i").classList.add("fa-play")
+            instance.popper.querySelector(".play-option span").innerHTML = "play"
+          }
+        }
+        const soundHandler = async (e) => {
+          this.sound = !this.sound
+          await this.user.settings.put({ key: "sound", val: this.sound })
+          if (this.sound) {
+            instance.popper.querySelector(".sound-option i").classList.remove("fa-volume-high")
+            instance.popper.querySelector(".sound-option i").classList.add("fa-volume-xmark")
+            instance.popper.querySelector(".sound-option span").innerHTML = "turn off sound"
+          } else {
+            instance.popper.querySelector(".sound-option i").classList.remove("fa-volume-xmark")
+            instance.popper.querySelector(".sound-option i").classList.add("fa-volume-high")
+            instance.popper.querySelector(".sound-option span").innerHTML = "turn on sound"
+          }
+        }
+        instance.popper.querySelector(".play-option").addEventListener("click", liveHandler)
+        instance.popper.querySelector(".sound-option").addEventListener("click", soundHandler)
+        instance.extended_handlers = {
+          liveHandler,
+          soundHandler
+        }
       }
-    })
+    });
+
   }
   async init () {
     console.log("INIT", VERSION)
@@ -269,10 +324,12 @@ class App {
     this.checkpoints[root_path] = btime
   }
   notify() {
-    if (!this.notify_audio) {
-      this.notify_audio = new Audio('pop.mp3');
+    if (this.sound) {
+      if (!this.notify_audio) {
+        this.notify_audio = new Audio('pop.mp3');
+      }
+      this.notify_audio.play();
     }
-    this.notify_audio.play();
   }
   init_rpc() {
     this.api.listen(async (_event, value) => {
@@ -281,14 +338,11 @@ class App {
           if (this.live) {
             for(let meta of value.params) {
               queueMicrotask(async () => {
-                console.log("INSERT", meta)
                 let response = await this.insert(meta, { silent: true }).catch((e) => {
                   console.log("ERROR", e)
                 })
                 let x = document.querySelector(`.card`)
-                console.log("x", x)
                 let first = document.querySelector(`.card tr[data-key='${this.navbar.sorter.column}'] .copy-text`)
-                console.log("first", first)
                 if (first) {
                   let checkpoint = first.getAttribute("data-value")
                   this.worker.postMessage({
@@ -325,37 +379,22 @@ class App {
   }
   init_minimize() {
     document.querySelector("#minimize").addEventListener("click", async (e) => {
-      document.querySelector("#minimize i").classList.toggle("fa-angles-up")
-      document.querySelector("#minimize i").classList.toggle("fa-angles-down")
       e.target.closest("nav").classList.toggle("minimized")
     })
   }
   async init_pin() {
-    console.log("init pinned")
     if (this.api.config && this.api.config.agent === "electron") {
-
-      let r = await this.user.settings.where({ key: "pinned" }).first()
-      if (r) {
-        this.pinned = r.val 
-      } else {
-        this.pinned = false
-      }
-      console.log("this.pinned", this.pinned)
-      this.api.pin(this.pinned)
+      let res = await this.api.pinned()
+      this.pinned = res.pinned
       if (this.pinned) {
-        document.querySelector("#pin span").innerHTML = "&nbsp;&nbsp;Pinned"
+        document.querySelector("#pin").classList.add("active")
       } else {
-        document.querySelector("#pin span").innerHTML = "&nbsp;&nbsp;Pin"
+        document.querySelector("#pin").classList.remove("active")
       }
-
       document.querySelector("#pin").addEventListener("click", async (e) => {
-        let old = this.pinned;
-        await this.user.settings.put({ key: "pinned", val: !old })
+        await this.api.pin()
         await this.init_pin()
       }, { once: true })
-
-    } else {
-      console.log("not electron, don't do it")
     }
   }
   async init_zoom () {
@@ -394,7 +433,6 @@ class App {
     if (!this.worker) {
       this.worker = new Worker("./worker.js")
       this.worker.onmessage = async (e) => {
-        console.log("e.data", e.data)
         if (e.data.options) {
           if (e.data.options.prepend) {
             document.querySelector(".content-info").innerHTML = `<i class="fa-solid fa-check"></i> ${e.data.count}`
@@ -408,7 +446,6 @@ class App {
                 for(let el of expanded) {
                   srcs.push(el.getAttribute("data-src"))
                 }
-                console.log("expanded", srcs)
                 this.clusterize.prepend([data])
 
                 setTimeout(() => {
@@ -628,7 +665,12 @@ class App {
     if (query && query.length > 0) {
       params.set("query", query)
     }
-    location.href = "/?" + params.toString()
+    let newWin = hotkeys.isPressed("ctrl") || hotkeys.isPressed("cmd")
+    if (newWin) {
+      window.open("/?" + params.toString(), "_blank", "popup")
+    } else {
+      location.href = "/?" + params.toString()
+    }
   }
   stripPunctuation (str) {
     return str

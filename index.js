@@ -52,7 +52,12 @@ class Breadmachine {
     return attrs
   }
   auth(req, res) {
-    let session = (req.cookies.session ? req.cookies.session : uuidv4())
+    let session
+    if (req.agent === "electron") {
+      session = req.get("user-agent")
+    } else {
+      session = req.cookies.session ? req.cookies.session : uuidv4()
+    }
     if (!this.ipc[session]) {
       this.ipc[session] = new IPC(this, session, this.config)
       if (this.config.onconnect) {
@@ -181,11 +186,21 @@ class Breadmachine {
     app.get('/file', (req, res) => {
       res.sendFile(req.query.file)
     })
+    app.get('/card', (req, res) => {
+      let session = this.auth(req, res)
+      res.render("card", {
+        agent: req.agent,
+        theme: this.ipc[session].theme,
+        style: this.ipc[session].style,
+        version: this.VERSION,
+        file_path: req.query.file
+      })
+    })
     app.post("/ipc", async (req, res) => {
       let name = req.body.name
       let args = req.body.args
       let session = this.auth(req, res)
-      let r = await this.ipc[session].call(req.cookies.session, name, ...args)
+      let r = await this.ipc[session].call(session, name, ...args)
       if (r) {
         res.json(r)
       } else {
