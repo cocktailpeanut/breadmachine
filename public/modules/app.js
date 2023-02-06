@@ -343,19 +343,17 @@ class App {
                 })
                 let x = document.querySelector(`.card`)
                 let first = document.querySelector(`.card tr[data-key='${this.navbar.sorter.column}'] .copy-text`)
-                if (first) {
-                  let checkpoint = first.getAttribute("data-value")
-                  this.worker.postMessage({
-                    query: this.query,
-                    sorter: this.navbar.sorter,
-                    offset: 0,
-                    limit: 10,
-                    options: {
-                      checkpoint,
-                      prepend: true  
-                    }
-                  })
-                }
+                let checkpoint = (first ? first.getAttribute("data-value") : null)
+                this.worker.postMessage({
+                  query: this.query,
+                  sorter: this.navbar.sorter,
+                  offset: 0,
+                  limit: 10,
+                  options: {
+                    checkpoint,
+                    prepend: true  
+                  }
+                })
               })
             }
           }
@@ -605,28 +603,30 @@ class App {
       return `<div class='card' data-root="${item.root_path}" data-src="${item.file_path}">${card(item, this.stripPunctuation, this.style.recycle)}</div>`
     })
 
-    if (items.length > 0) {
-      if (this.style.recycle) {
-        if (!this.clusterize) {
-          this.clusterize = new Clusterize({
-            scrollElem: document.querySelector(".container"),
-            contentElem: document.querySelector(".content"),
-            keep_parity: false,
-            auto_adjust: false,
-            // blocks_in_cluster: 3,
-            rows_in_block: 5000,
-            callbacks: {
-              clusterChanged: () => {
-                this.selection.init()
-              }
+    if (this.style.recycle) {
+      if (!this.clusterize) {
+        this.clusterize = new Clusterize({
+          scrollElem: document.querySelector(".container"),
+          contentElem: document.querySelector(".content"),
+          keep_parity: false,
+          auto_adjust: false,
+          // blocks_in_cluster: 3,
+          rows_in_block: 5000,
+          callbacks: {
+            clusterChanged: () => {
+              this.selection.init()
             }
-          });
-        }
+          }
+        });
+      }
+      if (items.length > 0) {
         this.clusterize.append(data)
         setTimeout(() => {
           this.clusterize.refresh(true)
         }, 100)
-      } else {
+      }
+    } else {
+      if (items.length > 0) {
         let fragment = document.createDocumentFragment();
         let template = document.createElement('template');
         template.innerHTML = data.join("")
