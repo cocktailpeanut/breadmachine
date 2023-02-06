@@ -73,7 +73,7 @@ const card = (meta, stripPunctuation, recycle) => {
     }
 
     return `<tr data-key="${attr.key}">
-  <td>${attr.key}</td>
+  <td class='attr-key'>${attr.key}</td>
   <td class='attr-val'>
     <button title='copy to clipboard' class='copy-text ${display}' data-value="${attr.val}"><i class="fa-regular fa-clone"></i> <span></span></button>
     <div>

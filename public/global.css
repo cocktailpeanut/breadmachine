@@ -98,7 +98,7 @@ nav > * {
 nav button, nav .btn {
   cursor: pointer;
   font-weight: bold;
-  background: white;
+  background: none;
   color: black;
   border: none;
   min-width: 50px;
@@ -402,10 +402,15 @@ nav input {
   margin: 0 0 10px;
   font-weight: bold;
 }
+.card td.attr-key {
+  min-width: 100px;
+}
 .card td {
   box-sizing: border-box;
   font-size: 1rem;
+  /*
   min-width: 100px;
+  */
   vertical-align: top;
   display: table-cell;
 
@@ -633,18 +638,23 @@ tr button.edit-tags, tr button.open-file {
   padding: 10px;
   box-sizing: border-box;
 }
+.settings code {
+  overflow-wrap: break-word;
+}
 .settings .explain {
   padding: 20px;
+  width: 100%;
   box-sizing: border-box;
   margin: 10px 0;
   border-left: 5px solid royalblue;
 }
 .settings code {
   font-size: 12px;
+  line-height: 12px;
   font-familiy: Menlo, monaco, monospace;
   background: black;
   color: white;
-  padding: 5px;
+  padding: 2px 5px;
 }
 .settings pre {
   font-size: 12px;
@@ -1303,6 +1313,21 @@ nav button {
 
 
 
+@media screen and (max-width: 768px) {
+  .card.expanded {
+    max-width: 100%;
+  }
+  .card.expanded .col {
+    padding: 20px;
+  }
+  .card.expanded .row {
+    display: block;
+  }
+  .card.expanded img {
+    width: 100%;
+    max-width: 100%;
+  }
+}
 @media screen and (max-width: 1200px) {
   .nav-unit {
     justify-content: right;
@@ -1326,20 +1351,4 @@ nav button {
 
 
 
-  /*
-  popup
-  */
-  .card.expanded {
-    max-width: 100%;
-  }
-  .card.expanded .col {
-    padding: 20px;
-  }
-  .card.expanded .row {
-    display: block;
-  }
-  .card.expanded img {
-    width: 100%;
-    max-width: 100%;
-  }
 }

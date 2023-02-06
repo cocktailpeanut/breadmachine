@@ -86,12 +86,10 @@ class Listener {
             for(let i=0; i<5; i++) {
               let res = await this.sync(filename)
               if (res) {
-                console.log("found", res)
                 await this.events.add(res)
                 break;
               } else {
                 // try again in 1 sec
-                console.log("trying again in 1 sec...")
                 await new Promise(resolve => setTimeout(resolve, 1000));
               }
             }

@@ -19,6 +19,7 @@
     <script src="./modules/db.js"></script>
     <script src="./modules/card.js"></script>
     <script src="./modules/handler.js"></script>
+    <script src='./hotkeys.js'></script>
     <script src="./timeago.js"></script>
     <script src="./dexie.js"></script>
     <script src='./popper.js'></script>
@@ -34,6 +35,9 @@
         api.theme(theme.val)
       }
       const api = new API()
+      hotkeys("*", (e, handler) => {
+        // need to run once to get the isPressed to work later
+      })
       const app = {
         stripPunctuation: (str) => {
           return str
@@ -123,10 +127,17 @@
             // there's a change. re render
             let query = result.join(" ")
 
-            let params = new URLSearchParams({})
             if (query && query.length > 0) {
-              params.set("query", query)
-              location.href = "/?" + params.toString()
+              let params = new URLSearchParams({})
+              if (query && query.length > 0) {
+                params.set("query", query)
+              }
+              let newWin = hotkeys.isPressed("ctrl") || hotkeys.isPressed("cmd")
+              if (newWin) {
+                window.open("/?" + params.toString(), "_blank", "popup")
+              } else {
+                location.href = "/?" + params.toString()
+              }
             }
 
           }
