@@ -1303,9 +1303,6 @@ nav .divider {
 .left-menu .right-menu {
   display: none;
 }
-nav button:hover, nav .btn:hover {
-  padding: 5px;
-}
 nav button {
   flex-direction: column;
 }

@@ -19,6 +19,9 @@ class App {
       });
     }
     this.domparser = new DOMParser()
+    hotkeys.filter = function(event){
+      return true;
+    }
     hotkeys("ctrl+t,cmd+t,ctrl+n,cmd+n", (e) => {
       window.open("/", "_blank", "popup")
     })
@@ -123,6 +126,7 @@ class App {
     this.init_rpc()
     this.init_minimize()
     await this.bootstrap()
+    document.querySelector(".search-box .search").focus()
   }
   async init_db () {
     // upgrade from legacy db schema (breadboard => data + user)

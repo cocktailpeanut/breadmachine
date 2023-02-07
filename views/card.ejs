@@ -13,8 +13,13 @@
     <% } %>
   </head>
   <body class="<%=theme%>" data-style="<%=style%>">
-    <nav><div class='status'></div></nav>
-    <div class='pop container'></div>
+    <nav>
+      <div class='nav-unit left-menu'>
+        <a title="home" class='btn' href="/" class='btn'><i class="fa-solid fa-house"></i></a>
+      </div>
+      <div class='status'></div>
+    </nav>
+    <div class='pop container' data-src="<%=file_path%>"></div>
     <script src="./modules/api.js"></script>
     <script src="./modules/db.js"></script>
     <script src="./modules/card.js"></script>
@@ -149,7 +154,7 @@
         await db.init_db();
         await init_theme()
         let item = await db.db.files.where({
-          file_path: "<%=file_path%>"
+          file_path: document.querySelector(".container").getAttribute("data-src")
         }).first()
         console.log("item", item)
         let html = `<div class='card expanded popup-card' data-root="${item.root_path}" data-src="${item.file_path}">${card(item, app.stripPunctuation)}</div>`
@@ -171,6 +176,5 @@
         })
       })();
     </script>
-  </body>
   </body>
 </html>

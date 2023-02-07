@@ -31,6 +31,7 @@ class DB {
       let el = document.querySelector(button)
       if (el) {
         tippy(el, {
+          placement: "bottom-end",
           interactive: true,
           content: el.getAttribute("title")
         });

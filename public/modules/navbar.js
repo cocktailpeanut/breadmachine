@@ -119,6 +119,7 @@ class Navbar {
       let el = document.querySelector(button)
       if (el) {
         tippy(el, {
+          placement: "bottom-end",
           interactive: true,
           //placement: "bottom-end",
           content: el.getAttribute("title")
