@@ -54,7 +54,7 @@
     const init_db = async () => {
       // init data db
       db = new Dexie("data")
-      db.version(1).stores({
+      db.version(2).stores({
         files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens",
       })
       // init user db

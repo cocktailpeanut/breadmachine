@@ -9,7 +9,7 @@ importScripts("./dexie.js")
 //})
 var db = new Dexie("data")
 var user = new Dexie("user")
-db.version(1).stores({
+db.version(2).stores({
   files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens",
 })
 user.version(1).stores({
