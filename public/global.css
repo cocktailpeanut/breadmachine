@@ -1268,6 +1268,9 @@ popup
 .pop .card.expanded img {
   width: 100%
 }
+.pop .card:hover .grab {
+  background: none !important;
+}
 
 
 
@@ -1324,14 +1327,39 @@ nav button {
     width: 100%;
     max-width: 100%;
   }
+  .content-info {
+    width: 100%;
+    border: none !important;
+    padding: 10px;
+  }
+  .nav-unit {
+    padding: 0;
+  }
+  nav button, nav .btn {
+    padding: 5px;
+  }
+  nav {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  body.dark .content-info {
+    background: #111;
+  }
+  body.default .content-info {
+    background: white;
+  }
 }
 @media screen and (max-width: 1200px) {
+  nav button, nav .btn {
+    min-width: auto;
+  }
   .nav-unit {
-    justify-content: right;
     width: 100%;
   }
   .minimized .nav-actions {
+    justify-content: right;
     display: flex;
+    padding: 5px;
     width: 100%;
   }
   .nav-actions {
