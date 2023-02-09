@@ -2,20 +2,39 @@ const { fdir } = require("fdir");
 const xmlFormatter = require('xml-formatter');
 const fastq = require('fastq')
 const SSE = require('express-sse');
+const { minimatch } = require('minimatch')
 const fs = require('fs')
 const path = require('path')
 const GM = require('./crawler/gm')
 const Diffusionbee = require('./crawler/diffusionbee')
 const Standard = require('./crawler/standard')
-const Listener = require('./listener')
+//const Listener = require('./listener')
 class IPC {
   handlers = {}
   handle(name, fn) {
     this.handlers[name] = fn
   }
+  async push(msg) {
+    // if the filename matches any of the globs, push
+    let globs = Array.from(this.globs)
+    let matched = false
+    for(let g of globs) {
+      if (minimatch(msg.file_path, g)) {
+        matched = true
+        break
+      }
+    }
+    if (matched) {
+      await this.queue.push({
+        method: "new",
+        params: [msg]
+      })
+    }
+  }
   constructor(app, session, config) {
     this.session = session
-    this.listener = new Listener(this, session)
+    this.globs = new Set()
+//    this.listener = new Listener(this, session)
     this.app = app
     this.gm = new GM()
     this.sse = new SSE();
@@ -50,10 +69,13 @@ class IPC {
       this.style = _style
     })
     this.ipc.handle('subscribe', async (session, folderpaths) => {
-      this.listener.subscribe({
-        name: "folders",
-        args: folderpaths
-      })
+      // store the folder paths
+      // add to watcher
+      this.app.watcher.add(folderpaths)
+      for(let folder of folderpaths) {
+        const glob = `${folder}/**/*.png`
+        this.globs.add(glob)
+      }
     })
     this.ipc.handle('sync', async (session, rpc) => {
       console.log("## sync from rpc", session, rpc)
@@ -166,6 +188,35 @@ class IPC {
         indentation: "  "
       })
     })
+  }
+  async sync(filename) {
+    let r
+    for(let i=0; i<5; i++) {
+      const folder = path.dirname(filename)
+      let diffusionbee;
+      let standard;
+      let file_path = filename
+      let root_path = folder
+      let res;
+      try {
+        if (/diffusionbee/g.test(root_path)) {
+          if (!diffusionbee) {
+            diffusionbee = new Diffusionbee(root_path)
+            await diffusionbee.init()
+          }
+          res = await diffusionbee.sync(file_path)
+        } else {
+          if (!standard) {
+            standard = new Standard(root_path)
+            await standard.init()
+          }
+          res = await standard.sync(file_path)
+        }
+        return res
+      } catch (e) {
+        return null
+      }
+    }
   }
   async call(session, name, ...args) {
     let r = await this.handlers[name](session, ...args)

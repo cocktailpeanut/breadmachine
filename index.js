@@ -4,6 +4,7 @@ const getport = require('getport')
 const os = require('os')
 const fs = require('fs')
 const yaml = require('js-yaml');
+const chokidar = require('chokidar');
 const cookieParser = require('cookie-parser');
 const { v4: uuidv4 } = require('uuid');
 const Updater = require('./updater/index')
@@ -38,6 +39,31 @@ class Breadmachine {
       console.log("update check error", e)
     })
     this.start()
+
+
+    // realtime watcher
+    this.watcher = chokidar.watch([], {
+      ignoreInitial: true
+    })
+    this.watcher.on("add", async (filename) => {
+      for(let session in this.ipc) {
+        let ipc = this.ipc[session]
+        // try up to 5 times
+        for(let i=0; i<5; i++) {
+          let res = await ipc.sync(filename)
+          if (res) {
+            await ipc.push(res)
+            break;
+          } else {
+            // try again in 1 sec
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+      }
+    })
+  }
+  watch(p) {
+    this.watcher.add(p)
   }
   async settings() {
     let str = await fs.promises.readFile(this.config.config, "utf8")
@@ -69,13 +95,16 @@ class Breadmachine {
   }
   start() {
     let app = express()
+    app.use(express.static(path.resolve(__dirname, 'public')))
+    app.get('/file', (req, res) => {
+      res.sendFile(req.query.file)
+    })
     app.use(cookieParser());
     app.use((req, res, next) => {
       let a = req.get("user-agent")
       req.agent = (/breadboard/.test(a) ? "electron" : "web")
       next()
     })
-    app.use(express.static(path.resolve(__dirname, 'public')))
     if (this.basicauth) {
       app.use(this.basicauth.auth.bind(this.basicauth))
     }
@@ -182,9 +211,6 @@ class Breadmachine {
         theme: this.ipc[session].theme,
         style: this.ipc[session].style,
       })
-    })
-    app.get('/file', (req, res) => {
-      res.sendFile(req.query.file)
     })
     app.get('/card', (req, res) => {
       let session = this.auth(req, res)
