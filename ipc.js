@@ -74,7 +74,7 @@ class IPC {
       // add to watcher
       this.app.watch(folderpaths)
       for(let folder of folderpaths) {
-        const glob = `${folder}/**/*.png`
+        const glob = `${folder.replaceAll("\\", "/")}/**/*.png`
         this.globs.add(glob)
       }
       console.log("globs", this.globs)
