@@ -4,7 +4,7 @@ const getport = require('getport')
 const os = require('os')
 const fs = require('fs')
 const yaml = require('js-yaml');
-const chokidar = require('chokidar');
+const Watcher = require('watcher');
 const cookieParser = require('cookie-parser');
 const { v4: uuidv4 } = require('uuid');
 const Updater = require('./updater/index')
@@ -40,30 +40,33 @@ class Breadmachine {
     })
     this.start()
 
-
-    // realtime watcher
-    this.watcher = chokidar.watch([], {
+  }
+  watch(paths) {
+    if (this.watcher) {
+      this.watcher.close()
+    }
+    this.watcher = new Watcher(paths, {
       ignoreInitial: true
     })
     this.watcher.on("add", async (filename) => {
-      for(let session in this.ipc) {
-        let ipc = this.ipc[session]
-        // try up to 5 times
-        for(let i=0; i<5; i++) {
-          let res = await ipc.sync(filename)
-          if (res) {
-            await ipc.push(res)
-            break;
-          } else {
-            // try again in 1 sec
-            await new Promise(resolve => setTimeout(resolve, 1000));
+      if (filename.endsWith(".png")) {
+        console.log("added", filename)
+        for(let session in this.ipc) {
+          let ipc = this.ipc[session]
+          // try up to 5 times
+          for(let i=0; i<5; i++) {
+            let res = await ipc.sync(filename)
+            if (res) {
+              await ipc.push(res)
+              break;
+            } else {
+              // try again in 1 sec
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
           }
         }
       }
     })
-  }
-  watch(p) {
-    this.watcher.add(p)
   }
   async settings() {
     let str = await fs.promises.readFile(this.config.config, "utf8")

@@ -19,6 +19,7 @@ class IPC {
     let globs = Array.from(this.globs)
     let matched = false
     for(let g of globs) {
+      console.log("compare", msg.file_path, g)
       if (minimatch(msg.file_path, g)) {
         matched = true
         break
@@ -71,11 +72,12 @@ class IPC {
     this.ipc.handle('subscribe', async (session, folderpaths) => {
       // store the folder paths
       // add to watcher
-      this.app.watcher.add(folderpaths)
+      this.app.watch(folderpaths)
       for(let folder of folderpaths) {
         const glob = `${folder}/**/*.png`
         this.globs.add(glob)
       }
+      console.log("globs", this.globs)
     })
     this.ipc.handle('sync', async (session, rpc) => {
       console.log("## sync from rpc", session, rpc)
