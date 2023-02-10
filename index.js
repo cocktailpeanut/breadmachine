@@ -53,7 +53,7 @@ class Breadmachine {
       ignoreInitial: true
     })
     this.watcher.on("add", async (filename) => {
-      this.io.emit("debug", { added: filename })
+//      this.io.emit("debug", { added: filename })
       if (filename.endsWith(".png")) {
         for(let session in this.ipc) {
           let ipc = this.ipc[session]
