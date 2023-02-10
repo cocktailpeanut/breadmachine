@@ -1,8 +1,11 @@
 const path = require('path')
 const express = require('express')
+const cookie = require('cookie')
 const getport = require('getport')
+const http=require("http");
 const os = require('os')
 const fs = require('fs')
+const socketIO = require('socket.io')
 const yaml = require('js-yaml');
 const Watcher = require('watcher');
 const cookieParser = require('cookie-parser');
@@ -46,16 +49,17 @@ class Breadmachine {
       this.watcher.close()
     }
     this.watcher = new Watcher(paths, {
+      recursive: true,
       ignoreInitial: true
     })
     this.watcher.on("add", async (filename) => {
+      this.io.emit("debug", { added: filename })
       if (filename.endsWith(".png")) {
-        console.log("added", filename)
         for(let session in this.ipc) {
           let ipc = this.ipc[session]
           // try up to 5 times
           for(let i=0; i<5; i++) {
-            let res = await ipc.sync(filename)
+            let res = await ipc.parse(filename)
             if (res) {
               await ipc.push(res)
               break;
@@ -98,6 +102,19 @@ class Breadmachine {
   }
   start() {
     let app = express()
+    const server = http.createServer(app);
+    this.io = socketIO(server, {
+      cookie: true
+    });
+    this.io.on('connection', (socket) => {
+      let parsed = cookie.parse(socket.handshake.headers.cookie)
+      let session = parsed.session
+      this.ipc[session].socket = socket
+      socket.on('disconnect', () => {
+        console.log('Client disconnected')
+//        delete this.ipc[session]
+      })
+    });
     app.use(express.static(path.resolve(__dirname, 'public')))
     app.get('/file', (req, res) => {
       res.sendFile(req.query.file)
@@ -135,17 +152,6 @@ class Breadmachine {
         style: this.ipc[session].style,
       })
       if (this.default_sync_mode) this.default_sync_mode = false   // disable sync after the first time at launch
-    })
-    app.get('/stream', (req, res, next) => {
-      res.flush = () => {}; 
-      const last = req.header('Last-Event-ID')
-      next();
-    }, (req, res, next) => {
-      if (this.ipc[req.cookies.session]) {
-        this.ipc[req.cookies.session].sse.init(req, res);
-      } else {
-        next()
-      }
     })
     app.get("/settings", (req, res) => {
       let authorized = (this.basicauth ? true : false)
@@ -236,7 +242,7 @@ class Breadmachine {
         res.json({})
       }
     })
-    app.listen(this.port, () => {
+    server.listen(this.port, () => {
       console.log(`Breadboard running at http://localhost:${this.port}`)
     })
     this.app = app

@@ -1,6 +1,6 @@
 class API {
   constructor(config) {
-    this.es = new EventSource("/stream");
+    this.socket = io()
     this.config = config
   }
   sync (rpc) {
@@ -45,11 +45,13 @@ class API {
     }
   }
   listen (callback) {
-    const listener = (event) => {
-      callback(event, JSON.parse(JSON.parse(event.data)))
-    }
-    this.es.removeEventListener('message', listener)
-    this.es.addEventListener('message', listener)
+    this.socket.offAny()
+    this.socket.on("msg", (msg) => {
+      callback(msg, msg)
+    })
+    this.socket.on("debug", (msg) => {
+      console.log("debug", JSON.stringify(msg, null, 2))
+    })
   }
   select () {
     return this.request("select")

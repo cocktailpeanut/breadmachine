@@ -1,3 +1,12 @@
+const debounce = (callback, wait) => {
+  let timeoutId = null;
+  return (...args) => {
+    window.clearTimeout(timeoutId);
+    timeoutId = window.setTimeout(() => {
+      callback.apply(null, args);
+    }, wait);
+  };
+}
 class App {
   constructor (query, sorter_code, need_update, sync_mode, sync_folder, api) {
     this.api = api
@@ -25,6 +34,8 @@ class App {
     hotkeys("ctrl+t,cmd+t,ctrl+n,cmd+n", (e) => {
       window.open("/", "_blank", "popup")
     })
+
+    this.debounced_update = debounce(this.prepend_update.bind(this), 1000)
   }
   async init_live() {
     let live = await this.user.settings.where({ key: "live" }).first()
@@ -114,11 +125,6 @@ class App {
         this.selector.blur()
       }
     })
-//    this.style_selector = new TomSelect("nav select#styler", {
-//      onDropdownClose: () => {
-//        this.style_selector.blur()
-//      }
-//    })
     await this.init_db()
     if (this.api.config.agent === "electron") {
       await this.init_pin()
@@ -335,6 +341,21 @@ class App {
       this.notify_audio.play();
     }
   }
+  prepend_update() {
+    let x = document.querySelector(`.card`)
+    let first = document.querySelector(`.card tr[data-key='${this.navbar.sorter.column}'] .copy-text`)
+    let checkpoint = (first ? first.getAttribute("data-value") : null)
+    this.worker.postMessage({
+      query: this.query,
+      sorter: this.navbar.sorter,
+      offset: 0,
+      limit: 10,
+      options: {
+        checkpoint,
+        prepend: true  
+      }
+    })
+  }
   init_rpc() {
     this.api.listen(async (_event, value) => {
       if (value.method) {
@@ -345,19 +366,7 @@ class App {
                 let response = await this.insert(meta, { silent: true }).catch((e) => {
                   console.log("ERROR", e)
                 })
-                let x = document.querySelector(`.card`)
-                let first = document.querySelector(`.card tr[data-key='${this.navbar.sorter.column}'] .copy-text`)
-                let checkpoint = (first ? first.getAttribute("data-value") : null)
-                this.worker.postMessage({
-                  query: this.query,
-                  sorter: this.navbar.sorter,
-                  offset: 0,
-                  limit: 10,
-                  options: {
-                    checkpoint,
-                    prepend: true  
-                  }
-                })
+                this.debounced_update()
               })
             }
           }
@@ -461,6 +470,7 @@ class App {
                 let template = document.createElement('template');
                 template.innerHTML = data
                 document.querySelector(".content").prepend(template.content)
+                this.selection.init()
               }
               this.notify()
             }
