@@ -1,3 +1,12 @@
+const debounce = (callback, wait) => {
+  let timeoutId = null;
+  return (...args) => {
+    window.clearTimeout(timeoutId);
+    timeoutId = window.setTimeout(() => {
+      callback.apply(null, args);
+    }, wait);
+  };
+}
 class App {
   constructor (query, sorter_code, need_update, sync_mode, sync_folder, api) {
     this.api = api
@@ -20,11 +29,17 @@ class App {
     }
     this.domparser = new DOMParser()
     hotkeys.filter = function(event){
+      let target = event.target || event.srcElement;
+      if (target.closest(".tagger")) {
+        return false
+      }
       return true;
     }
     hotkeys("ctrl+t,cmd+t,ctrl+n,cmd+n", (e) => {
       window.open("/", "_blank", "popup")
     })
+
+    this.debounced_update = debounce(this.prepend_update.bind(this), 1000)
   }
   async init_live() {
     let live = await this.user.settings.where({ key: "live" }).first()
@@ -83,6 +98,7 @@ class App {
             instance.popper.querySelector(".play-option i").classList.add("fa-play")
             instance.popper.querySelector(".play-option span").innerHTML = "play"
           }
+          await this.subscribe()
         }
         const soundHandler = async (e) => {
           this.sound = !this.sound
@@ -114,11 +130,6 @@ class App {
         this.selector.blur()
       }
     })
-//    this.style_selector = new TomSelect("nav select#styler", {
-//      onDropdownClose: () => {
-//        this.style_selector.blur()
-//      }
-//    })
     await this.init_db()
     if (this.api.config.agent === "electron") {
       await this.init_pin()
@@ -274,10 +285,10 @@ class App {
       });
       this.offset = 0
       await this.draw()
-      await this.subscribe()
     }
     await this.navbar.view_mode()
     await this.init_live()
+    await this.subscribe()
   }
   async insert (o, options) {
     let tokens = []
@@ -335,6 +346,21 @@ class App {
       this.notify_audio.play();
     }
   }
+  prepend_update() {
+    let x = document.querySelector(`.card`)
+    let first = document.querySelector(`.card tr[data-key='${this.navbar.sorter.column}'] .copy-text`)
+    let checkpoint = (first ? first.getAttribute("data-value") : null)
+    this.worker.postMessage({
+      query: this.query,
+      sorter: this.navbar.sorter,
+      offset: 0,
+      limit: 10,
+      options: {
+        checkpoint,
+        prepend: true  
+      }
+    })
+  }
   init_rpc() {
     this.api.listen(async (_event, value) => {
       if (value.method) {
@@ -345,19 +371,7 @@ class App {
                 let response = await this.insert(meta, { silent: true }).catch((e) => {
                   console.log("ERROR", e)
                 })
-                let x = document.querySelector(`.card`)
-                let first = document.querySelector(`.card tr[data-key='${this.navbar.sorter.column}'] .copy-text`)
-                let checkpoint = (first ? first.getAttribute("data-value") : null)
-                this.worker.postMessage({
-                  query: this.query,
-                  sorter: this.navbar.sorter,
-                  offset: 0,
-                  limit: 10,
-                  options: {
-                    checkpoint,
-                    prepend: true  
-                  }
-                })
+                this.debounced_update()
               })
             }
           }
@@ -461,6 +475,7 @@ class App {
                 let template = document.createElement('template');
                 template.innerHTML = data
                 document.querySelector(".content").prepend(template.content)
+                this.selection.init()
               }
               this.notify()
             }
@@ -490,8 +505,12 @@ class App {
     }
   }
   async subscribe() {
-    let folderpaths = await this.user.folders.toArray()
-    await this.api.subscribe(folderpaths.map(x => x.name))
+    if (this.live) {
+      let folderpaths = await this.user.folders.toArray()
+      await this.api.subscribe(folderpaths.map(x => x.name))
+    } else {
+      await this.api.subscribe([])
+    }
   }
   async synchronize (paths, cb) {
     document.querySelector("#sync").classList.add("disabled")

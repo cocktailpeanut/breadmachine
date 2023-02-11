@@ -1,15 +1,21 @@
 const path = require('path')
 const express = require('express')
+const cookie = require('cookie')
 const getport = require('getport')
+const http=require("http");
 const os = require('os')
 const fs = require('fs')
+const socketIO = require('socket.io')
 const yaml = require('js-yaml');
+const Watcher = require('watcher');
 const cookieParser = require('cookie-parser');
 const { v4: uuidv4 } = require('uuid');
 const Updater = require('./updater/index')
 const packagejson = require('./package.json')
 const BasicAuth = require('./basicauth')
 const IPC = require('./ipc')
+const Diffusionbee = require('./crawler/diffusionbee')
+const Standard = require('./crawler/standard')
 class Breadmachine {
   ipc = {}
   async init(config) {
@@ -38,6 +44,70 @@ class Breadmachine {
       console.log("update check error", e)
     })
     this.start()
+
+  }
+  async parse(filename) {
+    let r
+    const folder = path.dirname(filename)
+    let diffusionbee;
+    let standard;
+    let file_path = filename
+    let root_path = folder
+    let res;
+    try {
+      if (/diffusionbee/g.test(root_path)) {
+        if (!diffusionbee) {
+          diffusionbee = new Diffusionbee(root_path)
+          await diffusionbee.init()
+        }
+        res = await diffusionbee.sync(file_path)
+      } else {
+        if (!standard) {
+          standard = new Standard(root_path)
+          await standard.init()
+        }
+        res = await standard.sync(file_path)
+      }
+      return res
+    } catch (e) {
+      return null
+    }
+  }
+  watch(paths) {
+    if (this.watcher) {
+      console.log("watcher off")
+      this.watcher.close()
+    }
+    if (paths.length > 0) {
+      console.log("watcher on")
+      this.watcher = new Watcher(paths, {
+        recursive: true,
+        ignoreInitial: true
+      })
+      this.watcher.on("add", async (filename) => {
+  //      this.io.emit("debug", { added: filename })
+        if (filename.endsWith(".png")) {
+          let res
+          for(let i=0; i<5; i++) {
+            console.log("trial", i)
+            res = await this.parse(filename)
+            if (res) {
+              break;
+            } else {
+              // try again in 1 sec
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          }
+          console.log("emit", filename, res)
+          if (res) {
+            for(let session in this.ipc) {
+              let ipc = this.ipc[session]
+              await ipc.push(res)
+            }
+          }
+        }
+      })
+    }
   }
   async settings() {
     let str = await fs.promises.readFile(this.config.config, "utf8")
@@ -69,13 +139,29 @@ class Breadmachine {
   }
   start() {
     let app = express()
+    const server = http.createServer(app);
+    this.io = socketIO(server, {
+      cookie: true
+    });
+    this.io.on('connection', (socket) => {
+      let parsed = cookie.parse(socket.handshake.headers.cookie)
+      let session = parsed.session
+      this.ipc[session].socket = socket
+      socket.on('disconnect', () => {
+        console.log('Client disconnected')
+//        delete this.ipc[session]
+      })
+    });
+    app.use(express.static(path.resolve(__dirname, 'public')))
+    app.get('/file', (req, res) => {
+      res.sendFile(req.query.file)
+    })
     app.use(cookieParser());
     app.use((req, res, next) => {
       let a = req.get("user-agent")
       req.agent = (/breadboard/.test(a) ? "electron" : "web")
       next()
     })
-    app.use(express.static(path.resolve(__dirname, 'public')))
     if (this.basicauth) {
       app.use(this.basicauth.auth.bind(this.basicauth))
     }
@@ -103,17 +189,6 @@ class Breadmachine {
         style: this.ipc[session].style,
       })
       if (this.default_sync_mode) this.default_sync_mode = false   // disable sync after the first time at launch
-    })
-    app.get('/stream', (req, res, next) => {
-      res.flush = () => {}; 
-      const last = req.header('Last-Event-ID')
-      next();
-    }, (req, res, next) => {
-      if (this.ipc[req.cookies.session]) {
-        this.ipc[req.cookies.session].sse.init(req, res);
-      } else {
-        next()
-      }
     })
     app.get("/settings", (req, res) => {
       let authorized = (this.basicauth ? true : false)
@@ -183,9 +258,6 @@ class Breadmachine {
         style: this.ipc[session].style,
       })
     })
-    app.get('/file', (req, res) => {
-      res.sendFile(req.query.file)
-    })
     app.get('/card', (req, res) => {
       let session = this.auth(req, res)
       res.render("card", {
@@ -207,7 +279,7 @@ class Breadmachine {
         res.json({})
       }
     })
-    app.listen(this.port, () => {
+    server.listen(this.port, () => {
       console.log(`Breadboard running at http://localhost:${this.port}`)
     })
     this.app = app

@@ -1,24 +1,41 @@
 const { fdir } = require("fdir");
 const xmlFormatter = require('xml-formatter');
 const fastq = require('fastq')
-const SSE = require('express-sse');
+const { minimatch } = require('minimatch')
 const fs = require('fs')
 const path = require('path')
 const GM = require('./crawler/gm')
 const Diffusionbee = require('./crawler/diffusionbee')
 const Standard = require('./crawler/standard')
-const Listener = require('./listener')
 class IPC {
   handlers = {}
   handle(name, fn) {
     this.handlers[name] = fn
   }
+  async push(msg) {
+    // if the filename matches any of the globs, push
+    let globs = Array.from(this.globs)
+    if (globs.length > 0) {
+      let matched = false
+      for(let g of globs) {
+        if (minimatch(msg.file_path, g)) {
+          matched = true
+          break
+        }
+      }
+      if (matched) {
+        await this.queue.push({
+          method: "new",
+          params: [msg]
+        })
+      }
+    }
+  }
   constructor(app, session, config) {
     this.session = session
-    this.listener = new Listener(this, session)
+    this.globs = new Set()
     this.app = app
     this.gm = new GM()
-    this.sse = new SSE();
     if (config) {
       if (config.ipc) {
         this.ipc = config.ipc
@@ -37,11 +54,7 @@ class IPC {
       }
     }
     this.queue = fastq.promise(async (msg) => {
-      if (msg.params && msg.params.length > 0 && msg.params[0].btime) {
-        this.sse.send(JSON.stringify(msg), null, msg.params[0].btime)
-      } else {
-        this.sse.send(JSON.stringify(msg))
-      }
+      this.socket.emit("msg", msg)
     }, 1)
     this.ipc.handle("theme", (session, _theme) => {
       this.theme = _theme
@@ -50,13 +63,17 @@ class IPC {
       this.style = _style
     })
     this.ipc.handle('subscribe', async (session, folderpaths) => {
-      this.listener.subscribe({
-        name: "folders",
-        args: folderpaths
-      })
+      // store the folder paths
+      // add to watcher
+
+      this.app.watch(folderpaths)
+      this.globs = new Set()
+      for(let folder of folderpaths) {
+        const glob = `${folder.replaceAll("\\", "/")}/**/*.png`
+        this.globs.add(glob)
+      }
     })
     this.ipc.handle('sync', async (session, rpc) => {
-      console.log("## sync from rpc", session, rpc)
       let filter
       if (rpc.paths) {
         let diffusionbee;
@@ -115,7 +132,6 @@ class IPC {
             let stat = await fs.promises.stat(filename)
             let btime = new Date(stat.birthtime).getTime()
             if (!rpc.checkpoint || btime > rpc.checkpoint) {
-              //console.log("above checkpoint", btime, rpc.checkpoint, filename)
               let res = await crawler.sync(filename, rpc.force)
               if (res) {
                 if (!res.btime) res.btime = res.mtime
