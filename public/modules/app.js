@@ -459,16 +459,27 @@ class App {
               if (this.style.recycle) {
                 let expanded = document.querySelectorAll(".expanded")
                 let srcs = []
+
+                // preserve the expanded items (data-src uris) before prepend
                 for(let el of expanded) {
                   srcs.push(el.getAttribute("data-src"))
                 }
-                this.clusterize.prepend([data])
 
+                // Preserve the selected items (data-src uris) before prepend
+                this.selected = this.selection.get()
+
+                // prepend
+                this.clusterize.prepend([data])
                 setTimeout(() => {
                   this.clusterize.refresh(true)
+
+                  // the selected items will be handled inside the clusterize initialization clusterChanged() callback
+
+                  // re-apply the expanded
                   for(let src of srcs) {
                     document.querySelector(`.card[data-src='${src}']`).classList.add("expanded")
                   }
+
                 }, 100)
               } else {
                 let fragment = document.createDocumentFragment();
@@ -638,6 +649,9 @@ class App {
           callbacks: {
             clusterChanged: () => {
               this.selection.init()
+              if (this.selected && Array.isArray(this.selected)) {
+                this.selection.set(this.selected)
+              }
             }
           }
         });

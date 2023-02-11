@@ -75,21 +75,36 @@ class Breadmachine {
   }
   watch(paths) {
     if (this.watcher) {
-      console.log("watcher off")
       this.watcher.close()
     }
     if (paths.length > 0) {
-      console.log("watcher on")
       this.watcher = new Watcher(paths, {
         recursive: true,
+        debounce: 0,
         ignoreInitial: true
       })
       this.watcher.on("add", async (filename) => {
   //      this.io.emit("debug", { added: filename })
         if (filename.endsWith(".png")) {
           let res
+          let last_mtime
+
+          let attempts = 20;
+          while(true) {
+            let stat = await fs.promises.stat(filename)
+            if (stat.mtimeMs === last_mtime) {
+              // no more change. stop
+              break;
+            }
+            last_mtime = stat.mtimeMs
+            attempts--
+            if (attempts <= 0) {
+              console.log("coudln't wait for file")
+              return
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
           for(let i=0; i<5; i++) {
-            console.log("trial", i)
             res = await this.parse(filename)
             if (res) {
               break;
@@ -98,7 +113,6 @@ class Breadmachine {
               await new Promise(resolve => setTimeout(resolve, 1000));
             }
           }
-          console.log("emit", filename, res)
           if (res) {
             for(let session in this.ipc) {
               let ipc = this.ipc[session]
@@ -144,13 +158,18 @@ class Breadmachine {
       cookie: true
     });
     this.io.on('connection', (socket) => {
-      let parsed = cookie.parse(socket.handshake.headers.cookie)
-      let session = parsed.session
-      this.ipc[session].socket = socket
-      socket.on('disconnect', () => {
-        console.log('Client disconnected')
-//        delete this.ipc[session]
-      })
+      try {
+        let parsed = cookie.parse(socket.handshake.headers.cookie)
+        console.log("first atteempt: parsed", parsed)
+        let session = parsed.session
+        this.ipc[session].socket = socket
+        socket.on('disconnect', () => {
+          console.log('Client disconnected')
+  //        delete this.ipc[session]
+        })
+      } catch (e) {
+        console.log("io connection error", e)
+      }
     });
     app.use(express.static(path.resolve(__dirname, 'public')))
     app.get('/file', (req, res) => {

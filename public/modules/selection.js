@@ -257,6 +257,17 @@ class Selection {
 //      })
     }
   }
+  get() {
+    return this.ds.getSelection().map((el) => {
+      return el.getAttribute("data-src")
+    })
+  }
+  set(srcs) {
+    this.els = srcs.map((src) => {
+      return document.querySelector(`[data-src='${src}']`)
+    })
+    this.ds.setSelection(this.els)
+  }
   async del() {
     let selected = this.els.map((el) => {
       return el.getAttribute("data-src")
