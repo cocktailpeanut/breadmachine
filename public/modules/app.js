@@ -98,6 +98,7 @@ class App {
             instance.popper.querySelector(".play-option i").classList.add("fa-play")
             instance.popper.querySelector(".play-option span").innerHTML = "play"
           }
+          await this.subscribe()
         }
         const soundHandler = async (e) => {
           this.sound = !this.sound
@@ -284,10 +285,10 @@ class App {
       });
       this.offset = 0
       await this.draw()
-      await this.subscribe()
     }
     await this.navbar.view_mode()
     await this.init_live()
+    await this.subscribe()
   }
   async insert (o, options) {
     let tokens = []
@@ -504,8 +505,12 @@ class App {
     }
   }
   async subscribe() {
-    let folderpaths = await this.user.folders.toArray()
-    await this.api.subscribe(folderpaths.map(x => x.name))
+    if (this.live) {
+      let folderpaths = await this.user.folders.toArray()
+      await this.api.subscribe(folderpaths.map(x => x.name))
+    } else {
+      await this.api.subscribe([])
+    }
   }
   async synchronize (paths, cb) {
     document.querySelector("#sync").classList.add("disabled")

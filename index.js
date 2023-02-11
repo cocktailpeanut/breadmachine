@@ -14,6 +14,8 @@ const Updater = require('./updater/index')
 const packagejson = require('./package.json')
 const BasicAuth = require('./basicauth')
 const IPC = require('./ipc')
+const Diffusionbee = require('./crawler/diffusionbee')
+const Standard = require('./crawler/standard')
 class Breadmachine {
   ipc = {}
   async init(config) {
@@ -44,33 +46,68 @@ class Breadmachine {
     this.start()
 
   }
+  async parse(filename) {
+    let r
+    const folder = path.dirname(filename)
+    let diffusionbee;
+    let standard;
+    let file_path = filename
+    let root_path = folder
+    let res;
+    try {
+      if (/diffusionbee/g.test(root_path)) {
+        if (!diffusionbee) {
+          diffusionbee = new Diffusionbee(root_path)
+          await diffusionbee.init()
+        }
+        res = await diffusionbee.sync(file_path)
+      } else {
+        if (!standard) {
+          standard = new Standard(root_path)
+          await standard.init()
+        }
+        res = await standard.sync(file_path)
+      }
+      return res
+    } catch (e) {
+      return null
+    }
+  }
   watch(paths) {
     if (this.watcher) {
+      console.log("watcher off")
       this.watcher.close()
     }
-    this.watcher = new Watcher(paths, {
-      recursive: true,
-      ignoreInitial: true
-    })
-    this.watcher.on("add", async (filename) => {
-//      this.io.emit("debug", { added: filename })
-      if (filename.endsWith(".png")) {
-        for(let session in this.ipc) {
-          let ipc = this.ipc[session]
-          // try up to 5 times
+    if (paths.length > 0) {
+      console.log("watcher on")
+      this.watcher = new Watcher(paths, {
+        recursive: true,
+        ignoreInitial: true
+      })
+      this.watcher.on("add", async (filename) => {
+  //      this.io.emit("debug", { added: filename })
+        if (filename.endsWith(".png")) {
+          let res
           for(let i=0; i<5; i++) {
-            let res = await ipc.parse(filename)
+            console.log("trial", i)
+            res = await this.parse(filename)
             if (res) {
-              await ipc.push(res)
               break;
             } else {
               // try again in 1 sec
               await new Promise(resolve => setTimeout(resolve, 1000));
             }
           }
+          console.log("emit", filename, res)
+          if (res) {
+            for(let session in this.ipc) {
+              let ipc = this.ipc[session]
+              await ipc.push(res)
+            }
+          }
         }
-      }
-    })
+      })
+    }
   }
   async settings() {
     let str = await fs.promises.readFile(this.config.config, "utf8")
