@@ -304,6 +304,23 @@ class Navbar {
       placement: "bottom-end",
       trigger: 'click',
       content: `<div class='view-option-popup'>
+  <hr>
+  <h3><i class="fa-solid fa-id-card"></i> Card header</h3>
+  <div class='row minimal-selector'>
+    <div>
+      <input id='default-card-header' type='radio' name='minimal' value='default'>
+      <label for='default-card-header'>default (header is shown always)</label>
+    </div>
+    <div>
+      <input id='minimal-card-header' type='radio' name='minimal' value='minimal'>
+      <label for='minimal-card-header'>minimal (header is shown only on hover)</label>
+    </div>
+    <div>
+      <input id='no-card-header' type='radio' name='minimal' value='none'>
+      <label for='no-card-header'>none (header is shown only when expanded)</label>
+    </div>
+  </div>
+  <hr>
   <h3><i class="fa-solid fa-minimize"></i> Minimized</h3>
   <div class='row'>
     <div>zoom ${this.app.zoom}%</div>
@@ -362,6 +379,13 @@ class Navbar {
 </div>`,
       allowHTML: true,
       onShown: () => {
+        if (this.app.minimal.val === "default") {
+          document.querySelector("#default-card-header").checked = "checked"
+        } else if (this.app.minimal.val === "minimal") {
+          document.querySelector("#minimal-card-header").checked = "checked"
+        } else {
+          document.querySelector("#no-card-header").checked = "checked"
+        }
         document.querySelector(`#${this.app.style.fit}-mode`).checked = "checked"
         if (this.app.style.recycle) {
           document.querySelector("#recycled-view-check").checked = "checked"
@@ -408,6 +432,12 @@ class Navbar {
           el.addEventListener("change", async (e) => {
             await this.app.user.settings.put({ key: "fit", val: e.target.value })
             await this.app.init_style()
+          })
+        })
+        document.querySelectorAll(".minimal-selector input[type=radio]").forEach((el) => {
+          el.addEventListener("change", async (e) => {
+            await this.app.user.settings.put({ key: "minimal", val: e.target.value })
+            await this.app.init_theme()
           })
         })
         document.querySelectorAll(".recycle-check input[type=radio]").forEach((el) => {

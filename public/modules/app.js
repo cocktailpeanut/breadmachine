@@ -421,8 +421,11 @@ class App {
   }
   async init_theme () {
     this.theme = await this.user.settings.where({ key: "theme" }).first()
+    this.minimal = await this.user.settings.where({ key: "minimal" }).first()
     if (!this.theme) this.theme = { val: "default" }
+    if (!this.minimal) this.minimal = { val: "default" }
     document.body.className = this.theme.val
+    document.body.setAttribute("data-minimal", this.minimal.val)
     document.querySelector("html").className = this.theme.val
     this.api.theme(this.theme.val)
   }
