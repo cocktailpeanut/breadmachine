@@ -80,7 +80,7 @@ class Breadmachine {
     if (paths.length > 0) {
       this.watcher = new Watcher(paths, {
         recursive: true,
-        debounce: 0,
+        debounce: 1000,
         ignoreInitial: true
       })
       this.watcher.on("add", async (filename) => {
@@ -89,21 +89,21 @@ class Breadmachine {
           let res
           let last_mtime
 
-          let attempts = 20;
-          while(true) {
-            let stat = await fs.promises.stat(filename)
-            if (stat.mtimeMs === last_mtime) {
-              // no more change. stop
-              break;
-            }
-            last_mtime = stat.mtimeMs
-            attempts--
-            if (attempts <= 0) {
-              console.log("coudln't wait for file")
-              return
-            }
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
+ //         let attempts = 20;
+ //         while(true) {
+ //           let stat = await fs.promises.stat(filename)
+ //           if (stat.mtimeMs === last_mtime) {
+ //             // no more change. stop
+ //             break;
+ //           }
+ //           last_mtime = stat.mtimeMs
+ //           attempts--
+ //           if (attempts <= 0) {
+ //             console.log("coudln't wait for file")
+ //             return
+ //           }
+ //           await new Promise(resolve => setTimeout(resolve, 100));
+ //         }
 
           // wait a bit to give time for the source apps to load the image
           await new Promise(resolve => setTimeout(resolve, 300));
