@@ -462,7 +462,7 @@ class App {
 
                 // preserve the expanded items (data-src uris) before prepend
                 for(let el of expanded) {
-                  srcs.push(el.getAttribute("data-src"))
+                  srcs.push(el.getAttribute("data-src").replaceAll("\\\\", "\\"))
                 }
 
                 // Preserve the selected items (data-src uris) before prepend
