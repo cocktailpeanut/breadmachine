@@ -469,7 +469,7 @@ class App {
                 this.selected = this.selection.get()
 
                 // prepend
-                this.clusterize.prepend([data])
+                this.clusterize.prepend(data)
                 setTimeout(() => {
                   this.clusterize.refresh(true)
 
@@ -484,7 +484,7 @@ class App {
               } else {
                 let fragment = document.createDocumentFragment();
                 let template = document.createElement('template');
-                template.innerHTML = data
+                template.innerHTML = data.join("")
                 document.querySelector(".content").prepend(template.content)
                 this.selection.init()
               }
