@@ -104,6 +104,10 @@ class Breadmachine {
             }
             await new Promise(resolve => setTimeout(resolve, 100));
           }
+
+          // wait a bit to give time for the source apps to load the image
+          await new Promise(resolve => setTimeout(resolve, 300));
+
           for(let i=0; i<5; i++) {
             res = await this.parse(filename)
             if (res) {
@@ -168,7 +172,7 @@ class Breadmachine {
   //        delete this.ipc[session]
         })
       } catch (e) {
-        console.log("io connection error", e)
+//        console.log("io connection error", e)
       }
     });
     app.use(express.static(path.resolve(__dirname, 'public')))

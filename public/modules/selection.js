@@ -261,13 +261,13 @@ class Selection {
     let selection = this.ds.getSelection()
     console.log("#selection", selection)
     return selection.map((el) => {
-      return el.getAttribute("data-src").replaceAll("\\\\", "\\")
+      return el.getAttribute("data-src")
     })
   }
   set(srcs) {
     console.log("set", JSON.stringify(srcs, null, 2))
     this.els = srcs.map((src) => {
-      return document.querySelector(`[data-src='${src}']`)
+      return document.querySelector(`[data-src='${CSS.escape(src)}']`)
     })
     console.log("this.els = ", this.els)
     this.ds.setSelection(this.els)

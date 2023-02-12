@@ -462,7 +462,7 @@ class App {
 
                 // preserve the expanded items (data-src uris) before prepend
                 for(let el of expanded) {
-                  srcs.push(el.getAttribute("data-src").replaceAll("\\\\", "\\"))
+                  srcs.push(el.getAttribute("data-src"))
                 }
 
                 // Preserve the selected items (data-src uris) before prepend
@@ -477,7 +477,7 @@ class App {
 
                   // re-apply the expanded
                   for(let src of srcs) {
-                    document.querySelector(`.card[data-src='${src}']`).classList.add("expanded")
+                    document.querySelector(`.card[data-src='${CSS.escape(src)}']`).classList.add("expanded")
                   }
 
                 }, 100)
