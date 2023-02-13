@@ -309,15 +309,15 @@ class Navbar {
   <div class='row minimal-selector'>
     <div>
       <input id='default-card-header' type='radio' name='minimal' value='default'>
-      <label for='default-card-header'>default (header is shown always)</label>
+      <label for='default-card-header'><b>Default:</b> header is shown always</label>
     </div>
     <div>
       <input id='minimal-card-header' type='radio' name='minimal' value='minimal'>
-      <label for='minimal-card-header'>minimal (header is shown only on hover)</label>
+      <label for='minimal-card-header'><b>Minimal:</b> header is shown only on hover</label>
     </div>
     <div>
       <input id='no-card-header' type='radio' name='minimal' value='none'>
-      <label for='no-card-header'>none (header is shown only when expanded)</label>
+      <label for='no-card-header'><b>None:</b> header is shown only when expanded</label>
     </div>
   </div>
   <hr>
