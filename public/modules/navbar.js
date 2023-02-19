@@ -290,12 +290,19 @@ class Navbar {
       interactive: true,
       placement: "bottom-end",
       trigger: 'click',
+      maxWidth: 500,
       content: `<div class='notification-popup'>
   <div><a href='${value.$url}' id='get-update' target="_blank">Get update</a></div>
   <h2>${value.latest.title}</h2>
   <div>${value.latest.content}</div>
 </div>`,
       allowHTML: true,
+      onShow: (instance) => {
+        console.log("instance", instance)
+        let maxHeight = 0.9 * (parseInt(window.innerHeight) - parseInt(document.querySelector("nav").offsetHeight));  // max height : 90% of the region excluding the navbar
+        console.log("maxHeight", maxHeight)
+        instance.popper.querySelector(".notification-popup").style.maxHeight = `${maxHeight}px`
+      }
     });
   }
   view_mode() {
@@ -303,8 +310,15 @@ class Navbar {
       interactive: true,
       placement: "bottom-end",
       trigger: 'click',
+      maxWidth: 500,
+      onShow: (instance) => {
+        console.log("instance", instance)
+        let maxHeight = 0.9 * (parseInt(window.innerHeight) - parseInt(document.querySelector("nav").offsetHeight));  // max height : 90% of the region excluding the navbar
+        console.log("maxHeight", maxHeight)
+        instance.popper.querySelector(".view-option-popup").style.maxHeight = `${maxHeight}px`
+      },
       content: `<div class='view-option-popup'>
-  <hr>
+  <br>
   <h3><i class="fa-solid fa-id-card"></i> Card header</h3>
   <div class='row minimal-selector'>
     <div>

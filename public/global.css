@@ -168,6 +168,7 @@ nav input {
   align-items: flex-start;
 }
 .view-option-popup {
+  overflow: auto;
   padding: 10px;
 }
 .view-option-popup h3 {
@@ -908,7 +909,6 @@ footer > * {
   word-wrap: break-word;
   -ms-word-break: break-all;
   word-break: break-word;
-  height: 500px;
   overflow: auto;
 }
 .notification-popup h1 {
