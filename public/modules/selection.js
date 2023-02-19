@@ -20,6 +20,9 @@ class Selection {
 //    this.init()
 
     hotkeys("shift+left,shift+up", (e) => {
+      if (this.inputFocused(e)) {
+        return
+      }
       if (this.els && this.els.length > 0) {
         let prev = this.els[0].previousSibling
         if (prev) {
@@ -33,6 +36,9 @@ class Selection {
       }
     })
     hotkeys("shift+right,shift+down", (e) => {
+      if (this.inputFocused(e)) {
+        return
+      }
       if (this.els && this.els.length > 0) {
         let next = this.els[this.els.length-1].nextSibling
         if (next) {
@@ -46,6 +52,9 @@ class Selection {
       }
     })
     hotkeys("left,up", (e) => {
+      if (this.inputFocused(e)) {
+        return
+      }
       if (this.els && this.els.length > 0) {
         let prev = this.els[0].previousSibling
         if (prev) {
@@ -59,6 +68,9 @@ class Selection {
       }
     })
     hotkeys("right,down", (e) => {
+      if (this.inputFocused(e)) {
+        return
+      }
       if (this.els && this.els.length > 0) {
         let next = this.els[this.els.length-1].nextSibling
         if (next) {
@@ -72,6 +84,9 @@ class Selection {
       }
     })
     hotkeys("delete,backspace", async (e) => {
+      if (this.inputFocused(e)) {
+        return
+      }
       await this.del()
     })
     hotkeys("escape", (e) => {
@@ -95,6 +110,9 @@ class Selection {
       }
     })
     hotkeys("ctrl+a,cmd+a", (e) => {
+      if (this.inputFocused(e)) {
+        return
+      }
       e.preventDefault()
       e.stopPropagation()
       this.els = Array.from(document.querySelectorAll(".card"))
@@ -224,10 +242,7 @@ class Selection {
 
     })
     document.querySelector("#delete-selected").addEventListener("click", async (e) => {
-      const confirmed = confirm("Delete the selected files from your device?")
-      if (confirmed) {
-        await this.del()
-      }
+      await this.del()
     })
   }
   init () {
@@ -273,21 +288,24 @@ class Selection {
     this.ds.setSelection(this.els)
   }
   async del() {
-    let selected = this.els.map((el) => {
-      return el.getAttribute("data-src")
-    })
-    await this.api.del(selected)
-    let res = await this.app.db.files.where("file_path").anyOf(selected).delete()
-    for(let el of this.els) {
-      el.classList.remove("expanded")
-      el.classList.add("removed")
-      setTimeout(() => {
-        el.remove()
-      }, 1000)
+    const confirmed = confirm("Delete the selected files from your device?")
+    if (confirmed) {
+      let selected = this.els.map((el) => {
+        return el.getAttribute("data-src")
+      })
+      await this.api.del(selected)
+      let res = await this.app.db.files.where("file_path").anyOf(selected).delete()
+      for(let el of this.els) {
+        el.classList.remove("expanded")
+        el.classList.add("removed")
+        setTimeout(() => {
+          el.remove()
+        }, 1000)
+      }
+      document.querySelector("footer").classList.add("hidden")
+      this.els = []
+      this.ds.clearSelection()
     }
-    document.querySelector("footer").classList.add("hidden")
-    this.els = []
-    this.ds.clearSelection()
   }
   update (items) {
 //    this.ds.setSelection(items)
@@ -306,5 +324,9 @@ class Selection {
     } else {
       document.querySelector("footer").classList.add("hidden")
     }
+  }
+  inputFocused(e) {
+    let target = e.target || e.srcElement;
+    return target.closest(".tagger") || target.tagName.toLowerCase() === "input"
   }
 }

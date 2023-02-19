@@ -28,13 +28,6 @@ class App {
       });
     }
     this.domparser = new DOMParser()
-    hotkeys.filter = function(event){
-      let target = event.target || event.srcElement;
-      if (target.closest(".tagger")) {
-        return false
-      }
-      return true;
-    }
     hotkeys("ctrl+t,cmd+t,ctrl+n,cmd+n", (e) => {
       window.open("/", "_blank", "popup")
     })
