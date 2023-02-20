@@ -242,6 +242,8 @@ class Parser {
       x["xmp:aesthetic_score"] = parseFloat(options.aesthetic_score)
     } else if (e.aesthetic_score) {
       x["xmp:aesthetic_score"] = parseFloat(e.aesthetic_score)
+    } else if (e.Score) {
+      x["xmp:aesthetic_score"] = parseFloat(e.Score)
     }
 
     if (options && options.controlnet_module) {
