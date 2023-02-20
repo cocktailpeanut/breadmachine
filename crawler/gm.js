@@ -63,6 +63,7 @@ class GM {
       "xmp:controlnet_module",
       "xmp:controlnet_model",
       "xmp:controlnet_weight",
+      "xmp:controlnet_guidance_strength",
       "dc:subject",
     ]
 
@@ -203,6 +204,7 @@ class GM {
         "xmp:controlnet_module",
         "xmp:controlnet_model",
         "xmp:controlnet_weight",
+        "xmp:controlnet_guidance_strength",
         "xmp:height",
       ]
 

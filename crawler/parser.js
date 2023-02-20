@@ -264,6 +264,12 @@ class Parser {
       x["xmp:controlnet_weight"] = parseFloat(e["ControlNet Weight"])
     }
 
+    if (options && options.controlnet_guidance_strength) {
+      x["xmp:controlnet_guidance_strength"] = parseFloat(options.controlnet_guidance_strength)
+    } else if (e["ControlNet Guidance Strength"]) {
+      x["xmp:controlnet_guidance_strength"] = parseFloat(e["ControlNet Guidance Strength"])
+    }
+
     let keys = [
       "xmp:prompt",
       "xmp:sampler",
@@ -281,6 +287,7 @@ class Parser {
       "xmp:controlnet_module",
       "xmp:controlnet_model",
       "xmp:controlnet_weight",
+      "xmp:controlnet_guidance_strength",
       "dc:subject",
     ]
 
@@ -298,7 +305,7 @@ class Parser {
   }
   applyType(item) {
     let integers = ["xmp:steps", "xmp:seed", "xmp:width", "xmp:height"]
-    let floats = ["xmp:cfg_scale", "xmp:aesthetic_score", "xmp:controlnet_weight"]
+    let floats = ["xmp:cfg_scale", "xmp:aesthetic_score", "xmp:controlnet_weight", "xmp:controlnet_guidance_strength"]
     if (integers.includes(item.key)) {
       return parseInt(item.val)
     }
