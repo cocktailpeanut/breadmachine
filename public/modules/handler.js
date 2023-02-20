@@ -1,4 +1,33 @@
 class Handler {
+  view(selectedCard) {
+    let img = selectedCard.querySelector("img").cloneNode()
+    let scaleFactor = Math.min(window.innerWidth / img.naturalWidth, window.innerHeight / img.naturalHeight)
+    if (this.viewer) this.viewer.destroy()
+    this.viewer = new Viewer(img, {
+      transition: false,
+      toolbar: {
+        'zoomIn': true,
+        'zoomOut': true,
+        'reset': true,
+        'play': true,
+        'oneToOne': true,
+        'rotateLeft': true,
+        'rotateRight': true,
+        'flipHorizontal': true,
+        'flipVertical': true
+      },
+      viewed() {
+        this.viewer.zoomTo(scaleFactor)
+      },
+      hidden() {
+        this.viewer.destroy()
+      }
+    });
+    this.viewer.show()
+  }
+  unview() {
+    this.viewer.destroy()
+  }
   constructor (app, api) {
     this.app = app
     this.api = api
@@ -19,27 +48,10 @@ class Handler {
       let card = (e.target.classList.contains("card") ? e.target : e.target.closest(".card"))
       if (card) card.classList.remove("fullscreen")
       if (fullscreenTarget) {
-        let img = fullscreenTarget.closest(".card").querySelector("img").cloneNode()
-        let scaleFactor = Math.min(window.innerWidth / img.naturalWidth, window.innerHeight / img.naturalHeight)
-        if (this.viewer) this.viewer.destroy()
-        this.viewer = new Viewer(img, {
-          transition: false,
-          toolbar: {
-            'zoomIn': true,
-            'zoomOut': true,
-            'reset': true,
-            'play': true,
-            'oneToOne': true,
-            'rotateLeft': true,
-            'rotateRight': true,
-            'flipHorizontal': true,
-            'flipVertical': true
-          },
-          viewed() {
-            this.viewer.zoomTo(scaleFactor)
-          },
-        });
-        this.viewer.show()
+        //let img = fullscreenTarget.closest(".card").querySelector("img").cloneNode()
+        //let img = fullscreenTarget.closest(".card").querySelector("img")
+        let selectedCard = fullscreenTarget.closest(".card")
+        this.view(selectedCard)
       } else if (openFileTarget) {
         this.api.open(openFileTarget.getAttribute("data-src"))
       } else if (popupTarget) {
@@ -106,7 +118,7 @@ class Handler {
         let key = tokenTarget.closest("tr").getAttribute("data-key")
         let val = tokenTarget.getAttribute("data-value")
         let popup_items = []
-        if (key === "file_path" || key === "model_name" || key === "agent") {
+        if (key === "file_path" || key === "model_name" || key === "agent" || key === "controlnet_model" || key === "controlnet_module" ) {
           if (val.split(" ").length > 1) {
             val = `"${val}"`
           }
@@ -135,7 +147,7 @@ class Handler {
           ]
         }
 
-        if (key === "width" || key === "height" || key === "seed" || key === "cfg_scale" || key === "steps" || key === "aesthetic_score") {
+        if (key === "width" || key === "height" || key === "seed" || key === "cfg_scale" || key === "steps" || key === "aesthetic_score" || key === "controlnet_weight") {
           popup_items = [
             `<span class='popup-link' data-key='-${key}' data-value='${val}'>&lt;</span>`,
             `<span class='popup-link' data-key='-=${key}' data-value='${val}'>&lt;=</span>`,
@@ -197,15 +209,15 @@ class Handler {
           }
           target.classList.toggle("expanded")
           if (target.classList.contains("expanded")) {
-            let img = target.querySelector("img").cloneNode()
-            let scaleFactor = Math.min(window.innerWidth / img.naturalWidth, window.innerHeight / img.naturalHeight)
-            if (this.viewer) this.viewer.destroy()
-            this.viewer = new Viewer(img, {
-              transition: false,
-              viewed() {
-                this.viewer.zoomTo(scaleFactor)
-              },
-            });
+            //let img = target.querySelector("img").cloneNode()
+            //let scaleFactor = Math.min(window.innerWidth / img.naturalWidth, window.innerHeight / img.naturalHeight)
+            //if (this.viewer) this.viewer.destroy()
+            //this.viewer = new Viewer(img, {
+            //  transition: false,
+            //  viewed() {
+            //    this.viewer.zoomTo(scaleFactor)
+            //  },
+            //});
 
             // h4 truncate
             let h4 = target.querySelector("h4")

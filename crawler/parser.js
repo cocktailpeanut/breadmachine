@@ -244,6 +244,24 @@ class Parser {
       x["xmp:aesthetic_score"] = parseFloat(e.aesthetic_score)
     }
 
+    if (options && options.controlnet_module) {
+      x["xmp:controlnet_module"] = options.controlnet_module
+    } else if (e["ControlNet Module"]) {
+      x["xmp:controlnet_module"] = e["ControlNet Module"]
+    }
+
+    if (options && options.controlnet_model) {
+      x["xmp:controlnet_model"] = options.controlnet_model
+    } else if (e["ControlNet Model"]) {
+      x["xmp:controlnet_model"] = e["ControlNet Model"]
+    }
+
+    if (options && options.controlnet_weight) {
+      x["xmp:controlnet_weight"] = parseFloat(options.controlnet_weight)
+    } else if (e["ControlNet Weight"]) {
+      x["xmp:controlnet_weight"] = parseFloat(e["ControlNet Weight"])
+    }
+
     let keys = [
       "xmp:prompt",
       "xmp:sampler",
@@ -258,6 +276,9 @@ class Parser {
       "xmp:width",
       "xmp:height",
       "xmp:aesthetic_score",
+      "xmp:controlnet_module",
+      "xmp:controlnet_model",
+      "xmp:controlnet_weight",
       "dc:subject",
     ]
 
@@ -275,7 +296,7 @@ class Parser {
   }
   applyType(item) {
     let integers = ["xmp:steps", "xmp:seed", "xmp:width", "xmp:height"]
-    let floats = ["xmp:cfg_scale", "xmp:aesthetic_score"]
+    let floats = ["xmp:cfg_scale", "xmp:aesthetic_score", "xmp:controlnet_weight"]
     if (integers.includes(item.key)) {
       return parseInt(item.val)
     }

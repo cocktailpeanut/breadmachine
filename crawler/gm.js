@@ -60,6 +60,9 @@ class GM {
       "xmp:width",
       "xmp:height",
       "xmp:aesthetic_score",
+      "xmp:controlnet_module",
+      "xmp:controlnet_model",
+      "xmp:controlnet_weight",
       "dc:subject",
     ]
 
@@ -197,6 +200,9 @@ class GM {
         "xmp:agent",
         "xmp:width",
         "xmp:aesthetic_score",
+        "xmp:controlnet_module",
+        "xmp:controlnet_model",
+        "xmp:controlnet_weight",
         "xmp:height",
       ]
 

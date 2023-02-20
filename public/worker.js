@@ -10,7 +10,7 @@ importScripts("./dexie.js")
 var db = new Dexie("data")
 var user = new Dexie("user")
 db.version(2).stores({
-  files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens, seed, cfg_scale, steps, aesthetic_score",
+  files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens, seed, cfg_scale, steps, aesthetic_score, controlnet_module, controlnet_model, controlnet_weight",
 })
 user.version(1).stores({
   folders: "&name",
@@ -42,6 +42,9 @@ function applyFilter(q, filters) {
       type: "int",
     }, {
       key: "aesthetic_score",
+      type: "float",
+    }, {
+      key: "controlnet_weight",
       type: "float",
     }]
     for(let filter of filters) {
@@ -87,6 +90,14 @@ function applyFilter(q, filters) {
         q = q.and((item) => {
           return filter.model_hash && item.model_hash && filter.model_hash.toLowerCase() === item.model_hash.toLowerCase()
         })
+      } else if (filter.controlnet_module) {
+        q = q.and((item) => {
+          return new RegExp(esc(filter.controlnet_module), "i").test(item.controlnet_module)
+        })
+      } else if (filter.controlnet_model) {
+        q = q.and((item) => {
+          return new RegExp(esc(filter.controlnet_model), "i").test(item.controlnet_model)
+        })
       } else if (filter.agent) {
         //q = q.and("agent").startsWithIgnoreCase(filter.agent)
         q = q.and((item) => {
@@ -105,7 +116,6 @@ function applyFilter(q, filters) {
           let operators = ["-", "-=", "", "+=", "+"]
           for(let operator of operators) {
             if (filter[`${operator}${number.key}`]) {
-              console.log(operator, number.key)
               q = q.and((item) => {
                 let val
                 if (number.type === "int") {
@@ -136,30 +146,18 @@ function applyFilter(q, filters) {
 
 const preprocess_query = (phrase) => {
   let complex_re = /(-?(file_path|tag)?:)"([^"]+)"/g
+  let complex_re2 = /-?(file_path|tag)?:"([^"]+)"/
   let mn_re = /model_name:"([^"]+)"/g
   let tag_re = /(-?(tag)?:)"([^"]+)"/g
   let agent_re = /agent:"([^"]+)"/g
+  let controlnet_model_re = /controlnet_model:"([^"]+)"/g
+  let controlnet_module_re = /controlnet_module:"([^"]+)"/g
+
   let mn_placeholder = "model_name:" + Date.now()
   let agent_placeholder = "agent:" + Date.now()
+  let controlnet_model_name_placeholder = "controlnet_model:" + Date.now()
+  let controlnet_module_name_placeholder = "controlnet_module:" + Date.now()
 
-  // file_path capture
-  let complex_captured = {}
-  let to_replace = []
-  while(true) {
-    let test = complex_re.exec(phrase)
-    if (test) {
-      let captured = test[3]
-      let complex_placeholder = test[1] + Math.floor(Math.random() * 100000)
-      to_replace.push(complex_placeholder)
-      complex_captured[complex_placeholder] = captured
-    } else {
-      break;
-    }
-  }
-  let complex_re2 = /-?(file_path|tag)?:"([^"]+)"/
-  for(let placeholder of to_replace) {
-    phrase = phrase.replace(complex_re2, placeholder)
-  }
 
   // model_name capture
   let mn_test = mn_re.exec(phrase)
@@ -177,12 +175,58 @@ const preprocess_query = (phrase) => {
     agent_captured = agent_test[1]
   }
 
+  // controlnet model name capture
+  let controlnet_model_test = controlnet_model_re.exec(phrase)
+  let controlnet_model_captured
+  if (controlnet_model_test && controlnet_model_test.length > 1) {
+    phrase = phrase.replace(controlnet_model_re, controlnet_model_name_placeholder)
+    controlnet_model_captured = controlnet_model_test[1]
+  }
+
+  // controlnet module name capture
+  let controlnet_module_test = controlnet_module_re.exec(phrase)
+  let controlnet_module_captured
+  if (controlnet_module_test && controlnet_module_test.length > 1) {
+    phrase = phrase.replace(controlnet_module_re, controlnet_module_name_placeholder)
+    controlnet_module_captured = controlnet_module_test[1]
+  }
+
+  // file_path capture
+  let complex_captured = {}
+  let to_replace = []
+  while(true) {
+    let test = complex_re.exec(phrase)
+    if (test) {
+      let captured = test[3]
+      let complex_placeholder = test[1] + Math.floor(Math.random() * 100000)
+      to_replace.push(complex_placeholder)
+      complex_captured[complex_placeholder] = captured
+    } else {
+      break;
+    }
+  }
+  for(let placeholder of to_replace) {
+    phrase = phrase.replace(complex_re2, placeholder)
+  }
+
   let prefixes = phrase.split(" ").filter(x => x && x.length > 0)
   const converted = []
   for (let prefix of prefixes) {
     if (prefix.startsWith("model_name:")) {
       if (mn_captured) {
         converted.push("model_name:" + prefix.replace(/model_name:[0-9]+/, mn_captured))
+      } else {
+        converted.push(prefix)
+      }
+    } else if (prefix.startsWith("controlnet_model:")) {
+      if (controlnet_model_captured) {
+        converted.push("controlnet_model:" + prefix.replace(/controlnet_model:[0-9]+/, controlnet_model_captured))
+      } else {
+        converted.push(prefix)
+      }
+    } else if (prefix.startsWith("controlnet_module:")) {
+      if (controlnet_module_captured) {
+        converted.push("controlnet_module:" + prefix.replace(/controlnet_module:[0-9]+/, controlnet_module_captured))
       } else {
         converted.push(prefix)
       }
@@ -262,6 +306,9 @@ function find (phrase) {
   }, {
     key: "aesthetic_score",
     type: "float"
+  }, {
+    key: "controlnet_weight",
+    type: "float",
   }]
   for(let prefix of prefixes) {
     if (prefix.startsWith("before:")) {
@@ -279,6 +326,14 @@ function find (phrase) {
     } else if (prefix.startsWith("model_hash:")) {
       filters.push({
         model_hash: prefix.replace("model_hash:", "").trim()
+      })
+    } else if (prefix.startsWith("controlnet_model:")) {
+      filters.push({
+        controlnet_model: prefix.replace("controlnet_model:", "").trim()
+      })
+    } else if (prefix.startsWith("controlnet_module:")) {
+      filters.push({
+        controlnet_module: prefix.replace("controlnet_module:", "").trim()
       })
     } else if (prefix.startsWith("agent:")) {
       filters.push({

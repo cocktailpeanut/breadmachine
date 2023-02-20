@@ -27,6 +27,10 @@ const card = (meta, stripPunctuation, recycle) => {
       el = `<span class='token' data-value="${attr.val}">${attr.val}</span>`
     } else if (attr.key === "model_hash") {
       el = `<span class='token' data-value="${attr.val}">${attr.val}</span>`
+    } else if (attr.key === "controlnet_model") {
+      el = `<span class='token' data-value="${attr.val}">${attr.val}</span>`
+    } else if (attr.key === "controlnet_module") {
+      el = `<span class='token' data-value="${attr.val}">${attr.val}</span>`
     } else if (attr.key === "agent" && attr.val) {
       el = `<span class='token' data-value="${attr.val}">${attr.val}</span>`
     } else if (attr.key === "tokens") {
@@ -61,7 +65,7 @@ const card = (meta, stripPunctuation, recycle) => {
         els.push(`<span class='token' data-value="${token}">${token}</span>`)
       }
       el = els.join("/")
-    } else if (attr.key === "width" || attr.key === "height" || attr.key === "seed" || attr.key === "cfg_scale" || attr.key === "steps" || attr.key === "aesthetic_score") {
+    } else if (attr.key === "width" || attr.key === "height" || attr.key === "seed" || attr.key === "cfg_scale" || attr.key === "steps" || attr.key === "aesthetic_score" || attr.key === "controlnet_weight") {
       el = `<span class='token' data-value="${attr.val}">${attr.val}</span>`
     } else {
       el = attr.val

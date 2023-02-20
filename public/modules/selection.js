@@ -56,15 +56,9 @@ class Selection {
         return
       }
       if (this.els && this.els.length > 0) {
-        let prev = this.els[0].previousSibling
-        if (prev) {
-          e.preventDefault()
-          e.stopPropagation()
-          this.els = [prev]
-          this.ds.setSelection(this.els)
-          prev.scrollIntoView({ behavior: "smooth", block: "end" })
-          this.update(this.els)
-        }
+        e.preventDefault()
+        e.stopPropagation()
+        this.prev(e)
       }
     })
     hotkeys("right,down", (e) => {
@@ -72,14 +66,22 @@ class Selection {
         return
       }
       if (this.els && this.els.length > 0) {
-        let next = this.els[this.els.length-1].nextSibling
-        if (next) {
-          e.preventDefault()
-          e.stopPropagation()
-          this.els = [next]
-          this.ds.setSelection(this.els)
-          next.scrollIntoView({ behavior: "smooth", block: "end" })
-          this.update(this.els)
+        e.preventDefault()
+        e.stopPropagation()
+        this.next(e)
+      }
+    })
+    hotkeys("space", async (e) => {
+      if (this.inputFocused(e)) {
+        return
+      }
+      e.preventDefault()
+      e.stopPropagation()
+      if (this.els && this.els.length > 0) {
+        if (this.app.handler.viewer && this.app.handler.viewer.isShown) {
+          this.app.handler.unview()
+        } else {
+          this.app.handler.view(this.els[0])
         }
       }
     })
@@ -90,6 +92,10 @@ class Selection {
       await this.del()
     })
     hotkeys("escape", (e) => {
+      if (this.app.handler.viewer && this.app.handler.viewer.isShown) {
+        // viewer mode, don't deselect items
+        return
+      }
       for(let el of this.els) {
         el.classList.remove("expanded")
         el.classList.remove("fullscreen")
@@ -272,6 +278,12 @@ class Selection {
 //      })
     }
   }
+  recover() {
+    let srcs = this.els.map((el) => {
+      return el.getAttribute("data-src")
+    })
+    this.set(srcs)
+  }
   get() {
     let selection = this.ds.getSelection()
     console.log("#selection", selection)
@@ -283,6 +295,8 @@ class Selection {
     console.log("set", JSON.stringify(srcs, null, 2))
     this.els = srcs.map((src) => {
       return document.querySelector(`[data-src='${CSS.escape(src)}']`)
+    }).filter((x) => {
+      return x
     })
     console.log("this.els = ", this.els)
     this.ds.setSelection(this.els)
@@ -295,6 +309,14 @@ class Selection {
       })
       await this.api.del(selected)
       let res = await this.app.db.files.where("file_path").anyOf(selected).delete()
+
+
+      // get the next element to focus after deleting
+
+      let focusEl = this.els[this.els.length-1].nextSibling
+      if (!focusEl) {
+        focusEl = this.els[0].previousSibling
+      }
       for(let el of this.els) {
         el.classList.remove("expanded")
         el.classList.add("removed")
@@ -302,9 +324,20 @@ class Selection {
           el.remove()
         }, 1000)
       }
-      document.querySelector("footer").classList.add("hidden")
-      this.els = []
-      this.ds.clearSelection()
+
+      console.log("focusEl", focusEl)
+      if (focusEl) {
+        if (this.app.handler.viewer && this.app.handler.viewer.isShown) {
+          this.app.handler.view(focusEl)
+        }
+        this.els = [focusEl]
+        this.ds.setSelection(this.els)
+      } else {
+        this.app.handler.unview()
+        this.els = []
+        this.ds.clearSelection()
+        document.querySelector("footer").classList.add("hidden")
+      }
     }
   }
   update (items) {
@@ -318,7 +351,9 @@ class Selection {
       this.removetags.remove_tag(tagItem)
     }
     document.querySelector(".selected-count .counter").innerHTML = items.length;
-    this.els = items
+    this.els = items.filter((x) => {
+      return x
+    })
     if (items.length > 0) {
       document.querySelector("footer").classList.remove("hidden")
     } else {
@@ -328,5 +363,37 @@ class Selection {
   inputFocused(e) {
     let target = e.target || e.srcElement;
     return target.closest(".tagger") || target.tagName.toLowerCase() === "input"
+  }
+  next(e) {
+    let next = this.els[this.els.length-1].nextSibling
+    if (next) {
+      if (this.app.handler.viewer && this.app.handler.viewer.isShown) {
+        this.app.handler.view(next)
+      }
+      this.els = [next]
+      this.ds.setSelection(this.els)
+      console.log("setSelection next", this.els)
+      next.scrollIntoView({ behavior: "smooth", block: "end" })
+      this.update(this.els)
+      return true
+    } else {
+      return false
+    }
+  }
+  prev(e) {
+    let prev = this.els[0].previousSibling
+    if (prev) {
+      if (this.app.handler.viewer && this.app.handler.viewer.isShown) {
+        this.app.handler.view(prev)
+      }
+      this.els = [prev]
+      this.ds.setSelection(this.els)
+      console.log("setSelection prev", this.els)
+      prev.scrollIntoView({ behavior: "smooth", block: "end" })
+      this.update(this.els)
+      return true
+    } else {
+      return false
+    }
   }
 }

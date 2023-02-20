@@ -133,8 +133,14 @@ class Navbar {
     let fp_re = /file_path:"(.+)"/g
     let mn_re = /model_name:"(.+)"/g
     let tag_re = /tag:"([^"]+)"/g
+    let controlnet_model_re = /controlnet_model:"([^"]+)"/g
+    let controlnet_module_re = /controlnet_module:"([^"]+)"/g
+
     let fp_placeholder = "file_path:" + Date.now()
     let mn_placeholder = "model_name:" + Date.now()
+    let controlnet_model_name_placeholder = "controlnet_model:" + Date.now()
+    let controlnet_module_name_placeholder = "controlnet_module:" + Date.now()
+
     let test = fp_re.exec(phrase)
     let fp_captured
     if (test && test.length > 1) {
@@ -146,6 +152,22 @@ class Navbar {
     if (test && test.length > 1) {
       phrase = phrase.replace(mn_re, mn_placeholder)
       mn_captured = test[1]
+    }
+
+    // controlnet model name capture
+    let controlnet_model_test = controlnet_model_re.exec(phrase)
+    let controlnet_model_captured
+    if (controlnet_model_test && controlnet_model_test.length > 1) {
+      phrase = phrase.replace(controlnet_model_re, controlnet_model_name_placeholder)
+      controlnet_model_captured = controlnet_model_test[1]
+    }
+
+    // controlnet module name capture
+    let controlnet_module_test = controlnet_module_re.exec(phrase)
+    let controlnet_module_captured
+    if (controlnet_module_test && controlnet_module_test.length > 1) {
+      phrase = phrase.replace(controlnet_module_re, controlnet_module_name_placeholder)
+      controlnet_module_captured = controlnet_module_test[1]
     }
 
     let tag_captured = {}
@@ -184,6 +206,18 @@ class Navbar {
       } else if (prefix.startsWith("tag:")) {
         if (tag_captured[prefix]) {
           converted.push(`tag:"${prefix.replace(/tag:[0-9]+/, tag_captured[prefix])}"`)
+        } else {
+          converted.push(prefix)
+        }
+      } else if (prefix.startsWith("controlnet_model:")) {
+        if (controlnet_model_captured) {
+          converted.push(`controlnet_model:"${prefix.replace(/controlnet_model:[0-9]+/, controlnet_model_captured)}"`)
+        } else {
+          converted.push(prefix)
+        }
+      } else if (prefix.startsWith("controlnet_module:")) {
+        if (controlnet_module_captured) {
+          converted.push(`controlnet_module:"${prefix.replace(/controlnet_module:[0-9]+/, controlnet_module_captured)}"`)
         } else {
           converted.push(prefix)
         }
@@ -298,9 +332,7 @@ class Navbar {
 </div>`,
       allowHTML: true,
       onShow: (instance) => {
-        console.log("instance", instance)
         let maxHeight = 0.9 * (parseInt(window.innerHeight) - parseInt(document.querySelector("nav").offsetHeight));  // max height : 90% of the region excluding the navbar
-        console.log("maxHeight", maxHeight)
         instance.popper.querySelector(".notification-popup").style.maxHeight = `${maxHeight}px`
       }
     });
@@ -312,9 +344,7 @@ class Navbar {
       trigger: 'click',
       maxWidth: 500,
       onShow: (instance) => {
-        console.log("instance", instance)
         let maxHeight = 0.9 * (parseInt(window.innerHeight) - parseInt(document.querySelector("nav").offsetHeight));  // max height : 90% of the region excluding the navbar
-        console.log("maxHeight", maxHeight)
         instance.popper.querySelector(".view-option-popup").style.maxHeight = `${maxHeight}px`
       },
       content: `<div class='view-option-popup'>

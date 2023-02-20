@@ -137,7 +137,7 @@ class App {
     // 1. The "data" DB only contains attributes that can be crawled from the files
     this.db = new Dexie("data")
     this.db.version(2).stores({
-      files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens, seed, cfg_scale, steps, aesthetic_score",
+      files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens, seed, cfg_scale, steps, aesthetic_score, controlnet_module, controlnet_model, controlnet_weight",
     })
 
     // 2. The "user" DB contains attributes that can NOT be crawled from the files
@@ -268,6 +268,7 @@ class App {
       let height = `${window.innerHeight * 2}px`;
       this.observer = new IntersectionObserver(async entries => {
         let entry = entries[0]
+        console.log("ratio", entry.intersectionRatio)
         if (entry.intersectionRatio > 0) {
           this.offset = this.offset + 1
           await this.draw()
@@ -462,7 +463,6 @@ class App {
                 }
 
                 // Preserve the selected items (data-src uris) before prepend
-                this.selected = this.selection.get()
 
                 // prepend
                 this.clusterize.prepend(data)
@@ -645,8 +645,8 @@ class App {
           callbacks: {
             clusterChanged: () => {
               this.selection.init()
-              if (this.selected && Array.isArray(this.selected)) {
-                this.selection.set(this.selected)
+              if (this.selection.els && this.selection.els.length > 0) {
+                this.selection.recover()
               }
             }
           }
