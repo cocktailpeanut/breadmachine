@@ -10,7 +10,7 @@ importScripts("./dexie.js")
 var db = new Dexie("data")
 var user = new Dexie("user")
 db.version(2).stores({
-  files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens, seed, cfg_scale, steps, aesthetic_score, controlnet_module, controlnet_model, controlnet_weight, controlnet_guidance_strength",
+  files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens, seed, cfg_scale, steps, aesthetic_score, controlnet_module, controlnet_model, controlnet_weight, controlnet_guidance_strength, input_strength",
 })
 user.version(1).stores({
   folders: "&name",
@@ -36,6 +36,9 @@ function applyFilter(q, filters) {
       type: "int"
     }, {
       key: "cfg_scale",
+      type: "float"
+    }, {
+      key: "input_strength",
       type: "float"
     }, {
       key: "steps",
@@ -302,6 +305,9 @@ function find (phrase) {
     type: "int"
   }, {
     key: "cfg_scale",
+    type: "float"
+  }, {
+    key: "input_strength",
     type: "float"
   }, {
     key: "steps",

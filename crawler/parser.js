@@ -143,6 +143,16 @@ class Parser {
       x["xmp:cfg_scale"] = parseFloat(e["Guidance Scale"])
     }
 
+    if (options && options.input_strength) {
+      x["xmp:input_strength"] = options.input_strength
+    } else if (e["Denoising strength"]) {
+      x["xmp:input_strength"] = parseFloat(e["Denoising strength"])
+    } else if (e.inp_img_strength) {
+      x["xmp:input_strength"] = parseFloat(e.inp_img_strength)
+    } else if (e.strength) {
+      x["xmp:input_strength"] = parseFloat(e.strength)
+    }
+
     if (options && options.seed) {
       x["xmp:seed"] = options.seed
     } else if (e.Seed) {
@@ -275,6 +285,7 @@ class Parser {
       "xmp:sampler",
       "xmp:steps",
       "xmp:cfg_scale",
+      "xmp:input_strength",
       "xmp:seed",
       "xmp:negative_prompt",
       "xmp:model_name",
@@ -305,7 +316,7 @@ class Parser {
   }
   applyType(item) {
     let integers = ["xmp:steps", "xmp:seed", "xmp:width", "xmp:height"]
-    let floats = ["xmp:cfg_scale", "xmp:aesthetic_score", "xmp:controlnet_weight", "xmp:controlnet_guidance_strength"]
+    let floats = ["xmp:cfg_scale", "xmp:input_strength", "xmp:aesthetic_score", "xmp:controlnet_weight", "xmp:controlnet_guidance_strength"]
     if (integers.includes(item.key)) {
       return parseInt(item.val)
     }

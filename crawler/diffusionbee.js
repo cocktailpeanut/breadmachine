@@ -126,6 +126,9 @@ class Diffusionbee {
             key: 'xmp:cfg_scale',
             val: (m["guidence_scale"] ? parseFloat(m["guidence_scale"]) : null),
           }, {
+            key: 'xmp:input_strength',
+            val: (m["inp_img_strength"] ? parseFloat(m["inp_img_strength"]) : null),
+          }, {
             key: 'xmp:seed',
             val: seed,
           }, {

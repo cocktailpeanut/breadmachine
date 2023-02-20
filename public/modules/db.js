@@ -146,7 +146,7 @@ class DB {
     // 1. The "data" DB only contains attributes that can be crawled from the files
     this.db = new Dexie("data")
     this.db.version(2).stores({
-      files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens, seed, cfg_scale, steps, aesthetic_score, controlnet_module, controlnet_model, controlnet_weight, controlnet_guidance_strength",
+      files: "file_path, agent, model_name, model_hash, root_path, prompt, btime, mtime, width, height, *tokens, seed, cfg_scale, steps, aesthetic_score, controlnet_module, controlnet_model, controlnet_weight, controlnet_guidance_strength, input_strength",
     })
 
     // 2. The "user" DB contains attributes that can NOT be crawled from the files

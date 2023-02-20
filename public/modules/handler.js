@@ -147,7 +147,7 @@ class Handler {
           ]
         }
 
-        if (key === "width" || key === "height" || key === "seed" || key === "cfg_scale" || key === "steps" || key === "aesthetic_score" || key === "controlnet_weight" || key === "controlnet_guidance_strength") {
+        if (key === "width" || key === "height" || key === "seed" || key === "cfg_scale" || key === "steps" || key === "aesthetic_score" || key === "controlnet_weight" || key === "controlnet_guidance_strength" || key === "input_strength") {
           popup_items = [
             `<span class='popup-link' data-key='-${key}' data-value='${val}'>&lt;</span>`,
             `<span class='popup-link' data-key='-=${key}' data-value='${val}'>&lt;=</span>`,
