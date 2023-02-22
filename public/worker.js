@@ -98,11 +98,11 @@ function applyFilter(q, filters) {
         })
       } else if (filter.controlnet_module) {
         q = q.and((item) => {
-          return new RegExp(esc(filter.controlnet_module), "i").test(item.controlnet_module)
+          return item.controlnet_module === filter.controlnet_module
         })
       } else if (filter.controlnet_model) {
         q = q.and((item) => {
-          return new RegExp(esc(filter.controlnet_model), "i").test(item.controlnet_model)
+          return item.controlnet_model === filter.controlnet_model
         })
       } else if (filter.agent) {
         //q = q.and("agent").startsWithIgnoreCase(filter.agent)
