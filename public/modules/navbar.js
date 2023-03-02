@@ -369,7 +369,7 @@ class Navbar {
   <div class='row'>
     <div>zoom ${this.app.zoom}%</div>
     <div class='flex'>
-      <input id='zoom-range' type='range' min="20" max="300" value="${this.app.zoom}" step="1">
+      <input id='zoom-range' type='range' min="20" max="600" value="${this.app.zoom}" step="1">
     </div>
   </div>
   <br>

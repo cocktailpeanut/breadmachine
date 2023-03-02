@@ -6,6 +6,14 @@ html {
   height: 100%;
   width: 100%;
 }
+html#slideshow, html#slideshow body, html#slideshow img {
+  height: 100%;
+  width: 100%;
+}
+html#slideshow img {
+  object-fit: contain;
+}
+
 body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
@@ -101,7 +109,7 @@ nav button, nav .btn {
   background: none;
   color: black;
   border: none;
-  min-width: 50px;
+  min-width: 40px;
   box-sizing: border-box;
   text-decoration: none;
   border-radius: 4px;

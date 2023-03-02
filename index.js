@@ -16,6 +16,7 @@ const BasicAuth = require('./basicauth')
 const IPC = require('./ipc')
 const Diffusionbee = require('./crawler/diffusionbee')
 const Standard = require('./crawler/standard')
+const GM = require("gmgm")
 class Breadmachine {
   ipc = {}
   async init(config) {
@@ -40,6 +41,50 @@ class Breadmachine {
     this.need_update = null
     this.default_sync_mode = "default"
     this.current_sorter_code = 0
+
+    const home = os.homedir()
+    this.home = path.resolve(home, "__breadboard__")
+
+    this.config.gm = {
+      user: new GM({
+        store: path.resolve(this.home, "gm", "user"),
+        schema: [{
+          path: "dc:subject",
+          keys: []
+        }]
+      }),
+      agent: new GM({
+        store: path.resolve(this.home, "gm", "agent"),
+        schema: [{
+          path: "xmp:gm",
+          keys: [
+            "xmp:prompt",
+            "xmp:sampler",
+            "xmp:steps",
+            "xmp:cfg_scale",
+            "xmp:input_strength",
+            "xmp:seed",
+            "xmp:negative_prompt",
+            "xmp:model_name",
+            "xmp:model_hash",
+            "xmp:model_url",
+            "xmp:agent",
+            "xmp:width",
+            "xmp:height",
+            "xmp:aesthetic_score",
+            "xmp:controlnet_module",
+            "xmp:controlnet_model",
+            "xmp:controlnet_weight",
+            "xmp:controlnet_guidance_strength"
+          ]
+        }]
+      })
+    }
+
+
+    this.engines = {}
+
+
     await this.updateCheck().catch((e) => {
       console.log("update check error", e)
     })
@@ -56,20 +101,21 @@ class Breadmachine {
     let res;
     try {
       if (/diffusionbee/g.test(root_path)) {
-        if (!diffusionbee) {
-          diffusionbee = new Diffusionbee(root_path)
-          await diffusionbee.init()
+        if (!this.engines.diffusionbee) {
+          this.engines.diffusionbee = new Diffusionbee(root_path, this.config.gm)
         }
-        res = await diffusionbee.sync(file_path)
+        await this.engines.diffusionbee.init()
+        res = await this.engines.diffusionbee.sync(file_path)
       } else {
-        if (!standard) {
-          standard = new Standard(root_path)
-          await standard.init()
+        if (!this.engines.standard) {
+          this.engines.standard = new Standard(root_path, this.config.gm)
         }
-        res = await standard.sync(file_path)
+        await this.engines.standard.init()
+        res = await this.engines.standard.sync(file_path)
       }
       return res
     } catch (e) {
+      console.log("ERROR", e)
       return null
     }
   }
@@ -85,6 +131,7 @@ class Breadmachine {
       })
       this.watcher.on("add", async (filename) => {
   //      this.io.emit("debug", { added: filename })
+        //if (filename.endsWith(".png") || filename.endsWith(".jpg") || filename.endsWith(".jpeg") || filename.endsWith(".webp")) {
         if (filename.endsWith(".png")) {
           let res
           let last_mtime
@@ -164,15 +211,17 @@ class Breadmachine {
     this.io.on('connection', (socket) => {
       try {
         let parsed = cookie.parse(socket.handshake.headers.cookie)
-        console.log("first atteempt: parsed", parsed)
+        console.log("connect", parsed)
         let session = parsed.session
-        this.ipc[session].socket = socket
-        socket.on('disconnect', () => {
-          console.log('Client disconnected')
-  //        delete this.ipc[session]
-        })
+        if (this.ipc[session]) {
+          this.ipc[session].socket = socket
+          socket.on('disconnect', () => {
+            console.log('disconnect', parsed)
+            delete this.ipc[session]
+          })
+        }
       } catch (e) {
-//        console.log("io connection error", e)
+        console.log("io connection error", e)
       }
     });
     app.use(express.static(path.resolve(__dirname, 'public')))
@@ -289,6 +338,15 @@ class Breadmachine {
         style: this.ipc[session].style,
         version: this.VERSION,
         file_path: req.query.file
+      })
+    })
+    app.get('/screen', (req, res) => {
+      let session = this.auth(req, res)
+      res.render("screen", {
+        agent: req.agent,
+        theme: this.ipc[session].theme,
+        style: this.ipc[session].style,
+        version: this.VERSION,
       })
     })
     app.post("/ipc", async (req, res) => {

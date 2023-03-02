@@ -174,14 +174,18 @@ class Selection {
         return el.getAttribute("data-src")
       })
       let response = await this.api.gm({
+        path: "user",
         cmd: "set",
         args: [
           selected,
-          [{
-            key: "dc:subject",
-            val: tags,
-            mode: "delete"
-          }]
+          {
+            "dc:subject": tags.map((tag) => {
+              return {
+                val: tag,
+                mode: "delete"
+              }
+            })
+          }
         ]
       })
       let paths = this.els.map((el) => {
@@ -210,14 +214,16 @@ class Selection {
         return el.getAttribute("data-src")
       })
       let response = await this.api.gm({
+        path: "user",
         cmd: "set",
         args: [
           selected,
-          [{
-            key: "dc:subject",
-            val: tags,
-            mode: "merge"
-          }]
+          {
+            "dc:subject": [{
+              val: tags,
+              mode: "merge"
+            }]
+          }
         ]
       })
       let items = tags.map((x) => {
@@ -249,6 +255,9 @@ class Selection {
     })
     document.querySelector("#delete-selected").addEventListener("click", async (e) => {
       await this.del()
+    })
+    document.querySelector("#refresh-selected").addEventListener("click", async (e) => {
+      await this.refresh()
     })
   }
   init () {
@@ -300,6 +309,26 @@ class Selection {
     })
     console.log("this.els = ", this.els)
     this.ds.setSelection(this.els)
+  }
+  async refresh() {
+    let paths = this.els.map((el) => {
+      return {
+        file_path: el.getAttribute("data-src"),
+        root_path: el.getAttribute("data-root")
+      }
+    })
+    await this.app.synchronize(paths, async () => {
+      document.querySelector("footer").classList.add("hidden")
+      this.els = []
+      document.querySelector(".status").innerHTML = ""
+      let query = document.querySelector(".search").value
+      if (query && query.length > 0) {
+        await this.app.search(query)
+      } else {
+        await this.app.search()
+      }
+      bar.go(100)
+    })
   }
   async del() {
     const confirmed = confirm("Delete the selected files from your device?")

@@ -78,6 +78,7 @@ class Listener {
         let watcher = this.folders[folder]
         if (!watcher) {
           const glob = `${folder}/**/*.png`
+          //const glob = `${folder}/**/*.{jpg,jpeg,png}`
           watcher = chokidar.watch(glob, {
             ignoreInitial: true
           })

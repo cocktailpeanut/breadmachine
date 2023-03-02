@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html id='slideshow'>
+  <head>
+    <meta charset="UTF-8">
+    <title>breadboard</title>
+    <link href="/css/fontawesome.min.css" rel="stylesheet">
+    <link href="/css/solid.min.css" rel="stylesheet">
+    <link href="/css/regular.min.css" rel="stylesheet">
+    <link href="/css/brands.min.css" rel="stylesheet">
+    <link href="./global.css" rel="stylesheet" />
+    <% if (agent === "electron") { %>
+    <link href="./electron.css" rel="stylesheet" />
+    <% } %>
+  </head>
+  <body class="<%=theme%>" data-style="<%=style%>">
+    <img id='frame'>
+    <script src="./modules/api.js"></script>
+    <script src="./modules/db.js"></script>
+    <script src="./modules/card.js"></script>
+    <script src="./socket.io.js"></script>
+    <script src='./hotkeys.js'></script>
+    <script src="./timeago.js"></script>
+    <script src="./dexie.js"></script>
+    <script src='./popper.js'></script>
+    <script src="./tippy.js"></script>
+    <script src="./viewer.js"></script>
+    <script>
+      const VERSION = "<%=version%>"
+      const init_theme = async () => {
+        let theme = await db.user.settings.where({ key: "theme" }).first()
+        if (!theme) theme = { val: "default" }
+        document.body.className = theme.val
+        document.querySelector("html").className = theme.val
+        api.theme(theme.val)
+      }
+      const api = new API()
+      const db = new DB(api);
+      (async () => {
+        await db.init((meta) => {
+          document.querySelector("#frame").src = `/file?file=${encodeURIComponent(meta.file_path)}`
+        });
+        await init_theme()
+      })();
+    </script>
+  </body>
+</html>

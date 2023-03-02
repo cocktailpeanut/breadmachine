@@ -1,46 +1,67 @@
 const fs = require('fs');
 const path = require('path');
 const { fdir } = require("fdir");
-const GM = require('./gm')
 const Parser = require('./parser')
-const parser = new Parser()
 class Standard {
-  constructor(folderpath) {
+  constructor(folderpath, gm) {
     this.folderpath = folderpath
-    this.gm = new GM()
+    this.gm = gm
+    this.parser = new Parser()
   }
   async init() {
   }
-  async sync(filename, force) {
-    let info = await this.gm.get(filename)
-    try {
-      // no XMP tag => parse the custom headers and convert to XMP
-      if (!info.parsed || force) {
-        let buf = await fs.promises.readFile(filename)
-        let parsed = await parser.parse(buf)
-        if (!parsed.app) {
-          // no app found => try parse from external txt file
-          const parametersFilename = path.join(path.dirname(filename), path.basename(filename, path.extname(filename)) + '.txt');
-
-          try {
-            let parametersText = await fs.promises.readFile(parametersFilename, 'utf8')
-            parsed = await parser.parseParametersText(parsed, parametersText);
-          } catch (e) {
-            if (e.code !== 'ENOENT') {
-              throw e;
-            }
-          }
-        }
-
-        let list = parser.convert(parsed)
-        await this.gm.set(filename, list)
-      }
-
-      let serialized = await parser.serialize(this.folderpath, filename)
-      return serialized
-    } catch (e) {
-      console.log("E", e)
+  async extract(filename, force) {
+    let user_info = await this.gm.user.get(filename)
+    if (user_info.parsed) {
+      // The XMP file already exists
+      // USE THE XMP => Do nothing
+    } else {
+      // XMP does not exist
+      // Try inspecting the image
+      user_info = await this.gm.user.extract(filename)
     }
+    return user_info
+  }
+  async sync(filename, force) {
+
+    // 1. Try to read metadata from the image
+    // 2. If the image exists, Write the parsed metadata to XMP
+    // 3. Return the parsed metadata
+    let agent_info = await this.gm.agent.get(filename)
+    if (agent_info) {
+      // agent_info != null => image file exists
+      // parse the image file and write to XMP
+
+
+      // info := { xmp, parsed }
+      try {
+
+        // 1. Try to read metadata from the image
+        let list = await this.parser.parse(filename)
+        // 2. Write to XMP and set the new agent_info
+        agent_info = await this.gm.agent.set(
+          filename,
+          { "xmp:gm": list },
+          { store: "memory" }
+        )
+      } catch (e) {
+        console.log("ERROR sync", filename, e)
+      }
+    } else {
+      // agent_info: null => image file does not exist
+      // IGNORE
+    }
+
+    // 2. crawl from user XMP
+    // user_info := { xmp, parsed, cid, path } 
+    let user_info = await this.extract(filename, force)
+
+    // merge agent_info and user_info
+    let parsed = (user_info.parsed ? { ...agent_info.parsed, ...user_info.parsed } : agent_info.parsed)
+    let serialized = await this.parser.serialize(this.folderpath, filename, parsed)
+    serialized.id = agent_info.cid
+    return serialized
+
   }
 }
 module.exports = Standard

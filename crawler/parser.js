@@ -1,32 +1,77 @@
-const exifr = require('exifr')
+const exifr = require('./exifr.umd.js')
+const path = require('path')
 const fs = require('fs')
 const escapeHtml = require('escape-html')
 const yaml = require('js-yaml');
-const GM = require('./gm')
 class Parser {
   constructor() {
-    this.gm = new GM()
   }
-  async parse(buf) {
+  async parse(filename) {
+    let buf = await fs.promises.readFile(filename)
     let parsed = await exifr.parse(buf, true)
     let attrs = {}
     if (parsed.ImageWidth) attrs.width = parsed.ImageWidth
     if (parsed.ImageHeight) attrs.height = parsed.ImageHeight
 
     let app
+    let meta
     if (parsed["sd-metadata"]) {
       app = "invokeai"
     } else if (parsed.parameters) {
       app = "automatic1111"
+    } else if (parsed.ImageDescription) {
+      app = "imaginairy"
+    } else if (parsed.description && parsed.description.value) {
+      app = "stablediffusion"
+      parsed.parameters = parsed.description.value.replace("&#xA;", "\n")
+    } else if (parsed.userComment) {
+      app = "stablediffusion"
+      let chars = parsed.userComment.filter((x) => {
+        return x
+      })
+      let str = Buffer.from(chars).toString()
+      str = str.replace(/^(UNICODE|ASCII)/, "")
+      parsed.parameters = str
+    } else if (parsed.Comment) {
+      app = "novelai"
+      attrs.prompt = parsed.Description
+    } else {
+      let SDKEYS = Object.keys(parsed).filter((x) => {
+        return x.startsWith("SD:")
+      })
+      if (SDKEYS.length > 0) {
+        app = "sygil"
+      } else {
+        app = "stablediffusion"
+        meta = parsed
+      }
     }
-    let meta = this.getMeta(parsed, attrs)
+
+    if (app) {
+      if (!meta) {
+        meta = this.getMeta(parsed, attrs)
+      }
+    } else {
+      // no app found => try parse from external txt file
+      try {
+        const parametersFilename = path.join(path.dirname(filename), path.basename(filename, path.extname(filename)) + '.txt');
+        let str = await fs.promises.readFile(parametersFilename, 'utf8')
+        meta = await this.getMeta({ parameters: str }, attrs)
+        app = "stablediffusion"
+      } catch (e) {
+        if (e.code !== 'ENOENT') {
+          throw e;
+        }
+      }
+    }
     for(let key in meta) {
       if (typeof meta[key] === "string") {
         meta[key] = escapeHtml(meta[key])
       }
     }
 
-    return { ...attrs, ...meta, app }
+    // sync only needs to synchronize from the agent xmp
+    return this.convert({ ...attrs, ...meta, app })
   }
 
   async parseParametersText(parsed, parametersText) {
@@ -93,10 +138,7 @@ class Parser {
   }
   */
 
-
-
     const x = {}
-
     if (options && options.agent) {
       x["xmp:agent"] = options.agent
     } else if (e.agent) {
@@ -109,10 +151,21 @@ class Parser {
           x["xmp:agent"] = `${e.app_id}`// ${e.app_version}`
         }
       } else if (e.app === "automatic1111") {
-        x["xmp:agent"] = "automatic1111"
+        x["xmp:agent"] = e.app
+      } else {
+        x["xmp:agent"] = e.app
       }
     }
 
+    if (e.Size) {
+      let [width, height] = e.Size.split("x")
+      x["xmp:width"] = parseInt(width)
+      x["xmp:height"] = parseInt(height)
+    } else if (e.size) {
+      let [width, height] = e.size.split("x")
+      x["xmp:width"] = parseInt(width)
+      x["xmp:height"] = parseInt(height)
+    }
 
     if (options && options.width) {
       x["xmp:width"] = parseInt(options.width)
@@ -141,6 +194,12 @@ class Parser {
       x["xmp:cfg_scale"] = parseFloat(e.cfg_scale)
     } else if (e["Guidance Scale"]) {
       x["xmp:cfg_scale"] = parseFloat(e["Guidance Scale"])
+    } else if (e.guidance_scale) {
+      x["xmp:cfg_scale"] = parseFloat(e.guidance_scale)
+    } else if (e.scale) {
+      x["xmp:cfg_scale"] = parseFloat(e.scale)
+    } else if (e["prompt-strength"]) {
+      x["xmp:cfg_scale"] = parseFloat(e["prompt-strength"])
     }
 
     if (options && options.input_strength) {
@@ -151,6 +210,10 @@ class Parser {
       x["xmp:input_strength"] = parseFloat(e.inp_img_strength)
     } else if (e.strength) {
       x["xmp:input_strength"] = parseFloat(e.strength)
+    } else if (e.Strength) {
+      x["xmp:input_strength"] = parseFloat(e.Strength)
+    } else if (e["init-image-strength"]) {
+      x["xmp:input_strength"] = parseFloat(e["init-image-strength"])
     }
 
     if (options && options.seed) {
@@ -165,6 +228,12 @@ class Parser {
       x["xmp:negative_prompt"] = options.negative
     } else if (e["Negative prompt"]) {
       x["xmp:negative_prompt"] = e["Negative prompt"]
+    } else if (e.negative_prompt) {
+      x["xmp:negative_prompt"] = e.negative_prompt
+    } else if (e["negative-prompt"]) {
+      x["xmp:negative_prompt"] = e["negative-prompt"]
+    } else if (e.uc) {
+      x["xmp:negative_prompt"] = e.uc
     } else {
       // invokeai does negative prompts differently (included in the prompt), so need to parse the prompt to extract negative prompts
       if (e.prompt && Array.isArray(e.prompt) && e.prompt[0].prompt) {
@@ -196,6 +265,14 @@ class Parser {
       x["xmp:sampler"] = e.Sampler
     } else if (e.sampler) {
       x["xmp:sampler"] = e.sampler
+    } else if (e.sampler_name) {
+      x["xmp:sampler"] = e.sampler_name
+    } else if (e["sampler-type"]) {
+      x["xmp:sampler"] = e["sampler-type"]
+    } else if (e["sampler_name"]) {
+      x["xmp:sampler"] = e["sampler_name"]
+    } else if (e.Scheduler) {
+      x["xmp:sampler"] = e.Scheduler
     }
 
     if (options && options.steps) {
@@ -204,6 +281,10 @@ class Parser {
       x["xmp:steps"] = e.Steps
     } else if (e.steps) {
       x["xmp:steps"] = e.steps
+    } else if (e.num_inference_steps) {
+      x["xmp:steps"] = e.num_inference_steps
+    } else if (e.ddim_steps) {
+      x["xmp:steps"] = parseInt(e.ddim_steps)
     }
 
     if (!x["xmp:prompt"]) {
@@ -218,6 +299,16 @@ class Parser {
       x["xmp:model_name"] = e.model_weights
     } else if (e.Model) {
       x["xmp:model_name"] = e.Model
+    } else if (e.model_name) {
+      x["xmp:model_name"] = e.model_name
+    } else if (e.use_stable_diffusion_model) {
+      let modelname = e.use_stable_diffusion_model
+      if (/\\/.test(modelname)) {
+        // windows
+        x["xmp:model_name"] = path.win32.parse(modelname).name
+      } else {
+        x["xmp:model_name"] = path.posix.parse(modelname).name
+      }
     }
 
     if (options && options.model_hash) {
@@ -327,39 +418,51 @@ class Parser {
 
     return item.val
   }
-//  flatten (app, converted, filepath, btime, mtime) {
-//    return {
-//      app,
-//      model: converted.model,
-//      sampler: converted.image.sampler,
-//      prompt: converted.image.prompt[0].prompt,
-//      weight: converted.image.prompt[0].weight,
-//      steps: converted.image.steps,
-//      cfg_scale: converted.image.cfg_scale,
-//      height: (converted.image.height ? converted.image.height : 'NULL'),
-//      width: (converted.image.width ? converted.image.width : 'NULL'),
-//      seed: converted.image.seed,
-//      negative_prompt: converted.image.negative_prompt,
-//      mtime,
-//      btime,
-//      path: filepath
-//    }
-//  }
-  async serialize(root_path, file_path) {
-    let info = await this.gm.get(file_path)
+  async serialize(root_path, file_path, parsed) {
     let o = {}
-    for(let item of info.parsed) {
-      if (typeof item.val !== "undefined") {
-        if (item.key.startsWith("xmp:")) {
-          let key = item.key.replace("xmp:", "").toLowerCase()
-          o[key] = this.applyType(item)
-        } else if (item.key.startsWith("dc:")) {
-          let key = item.key.replace("dc:", "").toLowerCase()
-          if (Array.isArray(item.val) && item.val.length > 0) {
-            o[key] = item.val
+    if (parsed) {
+      const keys = [{
+        prefix: "xmp:",
+        key: "xmp:gm",
+        type: "object"
+      }, {
+        prefix: "dc:",
+        key: "dc:subject",
+        type: "array"
+      }]
+
+      for(let { key, prefix, type } of keys) {
+        if (parsed[key]) {
+          for(let i=0; i<parsed[key].length; i++) {
+            /********************************************************************************
+            *
+            *   item := 
+            *
+            *     object: {
+            *       key: 'xmp:model_hash',
+            *       val: 'cc6cb27103417325ff94f52b7a5d2dde45a7515b25c255d8e396c90014281516'
+            *     },
+            *
+            *     array: {
+            *       val: "favorite"
+            *     }
+            *
+            *********************************************************************************/
+            let item = parsed[key][i]
+            if (type === "array") {
+              let k = key.replace(prefix, "").toLowerCase()
+              if (o[k]) {
+                o[k].push(item.val)
+              } else {
+                o[k] = [item.val]
+              }
+            } else if (type === "object") {
+              if (typeof item.val !== "undefined") {
+                let k = item.key.replace(prefix, "").toLowerCase()
+                o[k] = this.applyType(item)
+              }
+            }
           }
-        } else {
-          o[item.key] = item.val
         }
       }
     }
@@ -378,20 +481,81 @@ class Parser {
         if (attr.height) image.height = parseInt(attr.height)
       }
       return { ...image, ...p, }
+    } else if (parsed.Comment) {
+      let p = JSON.parse(parsed.Comment)
+      if (attr) {
+        if (attr.width) p.width = parseInt(attr.width)
+        if (attr.height) p.height = parseInt(attr.height)
+        if (attr.prompt) p.prompt = attr.prompt
+      }
+      return p
+    } else if (parsed.ImageDescription) {
+      const [m, _prompt, width, height, kv] = /^"?(.*)"? ([0-9]+)x([0-9]+)px (negative-prompt:.+)$/.exec(parsed.ImageDescription)
+      const regex = /([\w-]+):("[^"]+"|[\w]+)/g;
+      const attrs = {};
+      let match;
+      while ((match = regex.exec(kv))) {
+        attrs[match[1]] = isNaN(match[2])
+          ? match[2].replace(/"/g, '')
+          : match[2]
+      }
+      attrs.prompt = _prompt;
+      attrs.width = width;
+      attrs.height = height;
+      return attrs
+    } else if (parsed["SD:width"]) {
+      let cleaned = {}
+      for(let key in parsed) {
+        if (key.startsWith("SD:")) {
+          cleaned[key.replace("SD:", "")] = parsed[key]
+        }
+      }
+      return cleaned
     } else if (parsed.parameters) {
       try {
         /**********************************************
         *
-        *   try the following format first:
+        *   1. try the following format first:
         *
-        *   prompt
-        *   key: val
-        *   key: val
-        *   key: val
+        *   key: val; key: val; key: val;...
+        *
         **********************************************/
-        let lines = parsed.parameters.split(/\r?\n/)
-        const attrs = yaml.load(lines.slice(1).join("\n"))
-        return { prompt: lines[0], ...attrs }
+        // mochidiffusion
+        if (/^Include in Image.*Generator: Mochi Diffusion.*/g.test(parsed.parameters)) {
+          let re = /([^:]+):([^:]+); /g
+          let items = [...parsed.parameters.matchAll(re)].map((item) => {
+            return {
+              key: item[1].trim(),
+              val: item[2].trim()
+            }
+          })
+          let attrs = {}
+          for(let kv of items) {
+            attrs[kv.key] = kv.val
+          }
+
+          attrs.prompt = attrs["Include in Image"]
+          attrs.negative_prompt = attrs["Exclude in Image"]
+          if (attr) {
+            if (attr.width) attrs.width = parseInt(attr.width)
+            if (attr.height) attrs.height = parseInt(attr.height)
+          }
+          return attrs
+        } else {
+          /**********************************************
+          *
+          *   2. try the following format second:
+          *
+          *   prompt
+          *   key: val
+          *   key: val
+          *   key: val
+          *
+          **********************************************/
+          let lines = parsed.parameters.split(/\r?\n/)
+          const attrs = yaml.load(lines.slice(1).join("\n"))
+          return { prompt: lines[0], ...attrs }
+        }
       } catch (e) {
         /*******************************************************************
         *
@@ -448,6 +612,7 @@ class Parser {
           if (attr.height) attrs.height = parseInt(attr.height)
         }
         return attrs
+
       }
     }
   }

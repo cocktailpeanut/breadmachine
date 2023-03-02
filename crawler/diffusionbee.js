@@ -39,18 +39,17 @@ exif {
 
 */
 
-const GM = require('./gm')
 const path = require('path');
 const { fdir } = require("fdir");
 const os = require('os');
 const fs = require('fs');
 const meta = require('png-metadata')
 const Parser = require('./parser')
-const parser = new Parser()
 class Diffusionbee {
-  constructor(folderpath) {
+  constructor(folderpath, gm) {
     this.folderpath = folderpath
-    this.gm = new GM()
+    this.gm = gm
+    this.parser = new Parser()
   }
   async init() {
     let str = await fs.promises.readFile(path.resolve(path.dirname(this.folderpath), "data.json"), "utf8")
@@ -89,75 +88,111 @@ class Diffusionbee {
       }
     }
   }
+  async extract(filename, force) {
+    let user_info = await this.gm.user.get(filename)
+    if (user_info.parsed) {
+      // The XMP file already exists
+      // USE THE XMP => Do nothing
+    } else {
+      // XMP does not exist
+      // Try inspecting the image
+      user_info = await this.gm.user.extract(filename)
+    }
+    return user_info
+  }
   async sync(filename, force) {
     /******************************************************************************
     *   info := {
-    *     parsed: [
-    *       { key: 'xmp:prompt', val: 'Steve Buscemi, itojunji style' },
-    *       { key: 'xmp:sampler' },
-    *       { key: 'xmp:steps', val: 25 },
-    *       { key: 'xmp:cfg_scale' },
-    *       { key: 'xmp:seed' },
-    *       { key: 'xmp:negative_prompt', val: 'disfigured' },
-    *       { key: 'xmp:model_name' },
-    *       { key: 'xmp:model_url' },
-    *       { key: 'xmp:agent' },
-    *       { key: 'dc:subject' }
-    *     ]
+    *     parsed: {
+    *       "xmp:gm": [
+    *         { key: 'xmp:prompt', val: 'Steve Buscemi, itojunji style' },
+    *         { key: 'xmp:sampler' },
+    *         { key: 'xmp:steps', val: 25 },
+    *         { key: 'xmp:cfg_scale' },
+    *         { key: 'xmp:seed' },
+    *         { key: 'xmp:negative_prompt', val: 'disfigured' },
+    *         { key: 'xmp:model_name' },
+    *         { key: 'xmp:model_url' },
+    *         { key: 'xmp:agent' },
+    *         { key: 'dc:subject' }
+    *       ]
+    *     }
     *   }
     ******************************************************************************/
-    let info = await this.gm.get(filename)
-    try {
-      // gm doesn't exist => write to files first
-      if (!info.parsed || force) {
-        let m = this.mapping[filename]
-        if (m) {
-          let seed = parseInt(m.seed) + 1234 * this.batchIndex[filename]
-          let list = [{
-            key: 'xmp:prompt',
-            val: m.prompt,
-          }, {
-            key: 'xmp:sampler',
-            val: "plms",
-          }, {
-            key: 'xmp:steps',
-            val: (m.dif_steps ? parseInt(m.dif_steps) : null),
-          }, {
-            key: 'xmp:cfg_scale',
-            val: (m["guidence_scale"] ? parseFloat(m["guidence_scale"]) : null),
-          }, {
-            key: 'xmp:input_strength',
-            val: (m["inp_img_strength"] ? parseFloat(m["inp_img_strength"]) : null),
-          }, {
-            key: 'xmp:seed',
-            val: seed,
-          }, {
-            key: 'xmp:negative_prompt',
-            val: m.negative_prompt,
-          }, {
-            key: 'xmp:model_name',
-            val: m.model_version,
-          }, {
-            key: 'xmp:model_url',
-            val: null,  // reserved
-          }, {
-            key: 'xmp:agent',
-            val: "diffusionbee"
-          }, {
-            key: 'xmp:width',
-            val: m.img_w
-          }, {
-            key: 'xmp:height',
-            val: m.img_h
-          }]
-          await this.gm.set(filename, list)
-        }
+
+    // 1. try to read metadata from the existing file
+    // 2. Write to XMP
+    // 3. Return the parsed metadata
+
+
+    // 1. try to read metadata from the existing file
+    let agent_info = await this.gm.agent.get(filename)
+    if (agent_info) {
+      // agent_info != null => image file exists
+      // parse the DB and write to XMP
+      let m = this.mapping[filename]
+      if (m) {
+        let seed = parseInt(m.seed) + 1234 * this.batchIndex[filename]
+        let list = [{
+          key: 'xmp:prompt',
+          val: m.prompt,
+        }, {
+          key: 'xmp:sampler',
+          val: "plms",
+        }, {
+          key: 'xmp:steps',
+          val: (m.dif_steps ? parseInt(m.dif_steps) : null),
+        }, {
+          key: 'xmp:cfg_scale',
+          val: (m["guidence_scale"] ? parseFloat(m["guidence_scale"]) : null),
+        }, {
+          key: 'xmp:input_strength',
+          val: (m["inp_img_strength"] ? parseFloat(m["inp_img_strength"]) : null),
+        }, {
+          key: 'xmp:seed',
+          val: seed,
+        }, {
+          key: 'xmp:negative_prompt',
+          val: m.negative_prompt,
+        }, {
+          key: 'xmp:model_name',
+          val: m.model_version,
+        }, {
+          key: 'xmp:model_url',
+          val: null,  // reserved
+        }, {
+          key: 'xmp:agent',
+          val: "diffusionbee"
+        }, {
+          key: 'xmp:width',
+          val: m.img_w
+        }, {
+          key: 'xmp:height',
+          val: m.img_h
+        }]
+
+        // 2. Write to XMP and set the new agent_info
+        agent_info = await this.gm.agent.set(
+          filename,
+          { "xmp:gm": list },
+//          { store: "memory" }
+        )
       }
-      let serialized = await parser.serialize(this.folderpath, filename)
-      return serialized
-    } catch (e) {
-      console.log("E", e, filename, this.mapping[filename])
+    } else {
+      // agent_info: null => image file does not exist
+      // IGNORE
     }
+
+    // 2. crawl from user XMP
+    let user_info = await this.extract(filename, force)
+
+    // merge agent_info and user_info
+    let parsed = (user_info.parsed ? { ...agent_info.parsed, ...user_info.parsed } : agent_info.parsed)
+
+    // return the serialized version
+    let serialized = await this.parser.serialize(this.folderpath, filename, parsed)
+    serialized.id = agent_info.cid
+    return serialized
   }
 };
 module.exports = Diffusionbee

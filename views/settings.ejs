@@ -118,10 +118,25 @@
         <div class='row'>CORE: breadmachine ${MACHINE_VERSION}</div>
       </div>
       <br><br>
+      <!--
+      <div class='header'>
+        <h2>Live Slideshow</h2>
+      </div>
+      <div class='rows'>
+        <div class='row'>
+          <div>Start live slideshow</div>
+          <div class='flexible'></div>
+          <button id='slide'><i class="fa-solid fa-expand"></i> Start</button> 
+        </div>
+      </div>
+      <br><br>
+      -->
       <div class='header'>
         <h2>Connected Folders</h2>
         <div>&nbsp;&nbsp;</div>
-        <a href="/connect" class='btn primary'><i class="fa-regular fa-pen-to-square"></i> Edit</a>
+        <div class='row'>
+          <a href="/connect" class='btn primary'><i class="fa-regular fa-pen-to-square"></i> Edit</a>
+        </div>
       </div>
       <div class='rows'>
       ${rows}
@@ -275,6 +290,9 @@
         if (e.key === "Enter") {
           location.href = "/?query=" + e.target.value
         }
+      })
+      document.querySelector("#slide").addEventListener("click", (e) => {
+        location.href = "/screen"
       })
       settingsRendered = true
     }

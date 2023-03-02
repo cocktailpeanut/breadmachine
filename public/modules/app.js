@@ -268,7 +268,6 @@ class App {
       let height = `${window.innerHeight * 2}px`;
       this.observer = new IntersectionObserver(async entries => {
         let entry = entries[0]
-        console.log("ratio", entry.intersectionRatio)
         if (entry.intersectionRatio > 0) {
           this.offset = this.offset + 1
           await this.draw()

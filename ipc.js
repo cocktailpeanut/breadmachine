@@ -4,7 +4,6 @@ const fastq = require('fastq')
 const { minimatch } = require('minimatch')
 const fs = require('fs')
 const path = require('path')
-const GM = require('./crawler/gm')
 const Diffusionbee = require('./crawler/diffusionbee')
 const Standard = require('./crawler/standard')
 class IPC {
@@ -35,7 +34,6 @@ class IPC {
     this.session = session
     this.globs = new Set()
     this.app = app
-    this.gm = new GM()
     if (config) {
       if (config.ipc) {
         this.ipc = config.ipc
@@ -43,6 +41,7 @@ class IPC {
     }
     this.theme = (config && config.theme ? config.theme : "default")
     this.config = config
+    this.gm = this.config.gm
     if (!this.ipc) {
       this.ipc = {
         handle: (name, fn) => {
@@ -70,6 +69,7 @@ class IPC {
       this.globs = new Set()
       for(let folder of folderpaths) {
         const glob = `${folder.replaceAll("\\", "/")}/**/*.png`
+        //const glob = `${folder.replaceAll("\\", "/")}/**/*.{jpg,jpeg,png,webp}`
         this.globs.add(glob)
       }
     })
@@ -84,13 +84,13 @@ class IPC {
           try {
             if (/diffusionbee/g.test(root_path)) {
               if (!diffusionbee) {
-                diffusionbee = new Diffusionbee(root_path)
+                diffusionbee = new Diffusionbee(root_path, this.gm)
                 await diffusionbee.init()
               }
               res = await diffusionbee.sync(file_path, rpc.force)
             } else {
               if (!standard) {
-                standard = new Standard(root_path)
+                standard = new Standard(root_path, this.gm)
                 await standard.init()
               }
               res = await standard.sync(file_path, rpc.force)
@@ -116,15 +116,16 @@ class IPC {
       } else if (rpc.root_path) {
         let filenames = await new fdir()
           .glob("**/*.png")
+          //.glob("**/*.{jpg,jpeg,png,webp}")
           .withBasePath()
           .crawl(rpc.root_path)
           .withPromise()
         if (filenames.length > 0) {
           let crawler;
           if (/diffusionbee/g.test(rpc.root_path)) {
-            crawler = new Diffusionbee(rpc.root_path)
+            crawler = new Diffusionbee(rpc.root_path, this.gm)
           } else {
-            crawler = new Standard(rpc.root_path)
+            crawler = new Standard(rpc.root_path, this.gm)
           }
           await crawler.init()
           for(let i=0; i<filenames.length; i++) {
@@ -172,15 +173,20 @@ class IPC {
     })
     this.ipc.handle('gm', async (session, rpc) => {
       if (rpc.cmd === "set" || rpc.cmd === "rm") {
-        let res = await this.gm[rpc.cmd](...rpc.args)
+        console.log("args", JSON.stringify(rpc.args, null, 2))
+        let res = await this.gm[rpc.path][rpc.cmd](...rpc.args)
         return res
       } 
     })
     this.ipc.handle('xmp', async (session, file_path) => {
-      let res = await this.gm.get(file_path)
-      return xmlFormatter(res.chunk.data.replace("XML:com.adobe.xmp\x00\x00\x00\x00\x00", ""), {
-        indentation: "  "
-      })
+      let res = await this.gm.agent.get(file_path)
+      if (res && res.xmp) {
+        return xmlFormatter(res.xmp, {
+          indentation: "  "
+        })
+      } else {
+        return ""
+      }
     })
   }
   async call(session, name, ...args) {

@@ -65,14 +65,16 @@ class Handler {
         if (is_favorited) {
           // unfavorite
           let response = await this.api.gm({
+            path: "user",
             cmd: "set",
             args: [
               src,
-              [{
-                key: "dc:subject",
-                val: ["favorite"],
-                mode: "delete"
-              }]
+              {
+                "dc:subject": [{
+                  val: "favorite",
+                  mode: "delete"
+                }]
+              }
             ]
           })
           favoriteFileTarget.setAttribute("data-favorited", "false")
@@ -83,14 +85,16 @@ class Handler {
         } else {
           // favorite
           let response = await this.api.gm({
+            path: "user",
             cmd: "set",
             args: [
               src,
-              [{
-                key: "dc:subject",
-                val: ["favorite"],
-                mode: "merge"
-              }]
+              {
+                "dc:subject": [{
+                  val: "favorite",
+                  mode: "merge"
+                }]
+              }
             ]
           })
           favoriteFileTarget.setAttribute("data-favorited", "true")
