@@ -3,6 +3,7 @@ class Handler {
     let img = selectedCard.querySelector("img").cloneNode()
     let scaleFactor = Math.min(window.innerWidth / img.naturalWidth, window.innerHeight / img.naturalHeight)
     if (this.viewer) this.viewer.destroy()
+    let self = this;
     this.viewer = new Viewer(img, {
       transition: false,
       toolbar: {
@@ -16,8 +17,15 @@ class Handler {
         'flipHorizontal': true,
         'flipVertical': true
       },
+      zoomed(e) {
+        self.zoomRatio = e.detail.ratio
+      },
       viewed() {
-        this.viewer.zoomTo(scaleFactor)
+        if (self.zoomRatio) {
+          this.viewer.zoomTo(self.zoomRatio)
+        } else {
+          this.viewer.zoomTo(scaleFactor)
+        }
       },
       hidden() {
         this.viewer.destroy()
@@ -231,7 +239,6 @@ class Handler {
               // clone node to remove any previously attached event listeners
 
               if (h4.offsetHeight < h4.scrollHeight || h4.offsetWidth < h4.scrollWidth) {
-                console.log(h4, h4.offsetHeight, h4.scrollHeight)
 
                 more.classList.remove("hidden") 
 

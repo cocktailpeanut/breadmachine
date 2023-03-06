@@ -134,9 +134,7 @@
       <div class='header'>
         <h2>Connected Folders</h2>
         <div>&nbsp;&nbsp;</div>
-        <div class='row'>
-          <a href="/connect" class='btn primary'><i class="fa-regular fa-pen-to-square"></i> Edit</a>
-        </div>
+        <a href="/connect" class='btn primary'><i class="fa-regular fa-pen-to-square"></i> Edit</a>
       </div>
       <div class='rows'>
       ${rows}
@@ -291,9 +289,11 @@
           location.href = "/?query=" + e.target.value
         }
       })
+      /*
       document.querySelector("#slide").addEventListener("click", (e) => {
         location.href = "/screen"
       })
+      */
       settingsRendered = true
     }
     (async () => {
