@@ -7,6 +7,7 @@ const os = require('os')
 const fs = require('fs')
 const socketIO = require('socket.io')
 const yaml = require('js-yaml');
+const xdg = require('xdg-basedir')
 const Watcher = require('watcher');
 const cookieParser = require('cookie-parser');
 const { v4: uuidv4 } = require('uuid');
@@ -42,8 +43,7 @@ class Breadmachine {
     this.default_sync_mode = "default"
     this.current_sorter_code = 0
 
-    const home = os.homedir()
-    this.home = path.resolve(home, "__breadboard__")
+    this.home = path.resolve(xdg.xdgCache, "breadboard")
 
     this.config.gm = {
       user: new GM({
