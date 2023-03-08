@@ -34,6 +34,7 @@
     "tsscmp": "^1.0.6",
     "uuid": "^9.0.0",
     "watcher": "^1.2.0",
+    "xdg-basedir": "^5.1.0",
     "xml-formatter": "^3.2.0"
   }
 }
