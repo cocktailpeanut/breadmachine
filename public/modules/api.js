@@ -16,11 +16,8 @@ class API {
     return this.request("pinned")
   }
   del (filenames) {
-    if (Array.isArray(filenames)) {
-      return this.request("del", filenames)
-    } else {
-      return this.request("del", [filenames])
-    }
+    const filesarray = [].concat(filenames)
+    return this.request("del", filesarray)
   }
   defaults () {
     return this.request("defaults")
