@@ -336,11 +336,10 @@ class Selection {
   async del() {
     const confirmed = confirm(`Delete the selected files from your device (liked files are skipped)?`)
     if (confirmed) {
-      let selected = this.els.filter((el) => !this.#isFavorite(el))
-      let selectedFiles = selected.map((el) => el.getAttribute("data-src"))
-      await this.api.del(selectedFiles)
-      let res = await this.app.db.files.where("file_path").anyOf(selectedFiles).delete()
-
+      let filteredSelection = this.els.filter((el) => !this.#isFavorite(el))
+      let filesToDelete = filteredSelection.map((el) => el.getAttribute("data-src"))
+      await this.api.del(filesToDelete)
+      let res = await this.app.db.files.where("file_path").anyOf(filesToDelete).delete()
 
       // get the next element to focus after deleting
 
@@ -348,7 +347,7 @@ class Selection {
       if (!focusEl) {
         focusEl = this.els[0].previousSibling
       }
-      for(let el of selected) {
+      for(let el of filteredSelection) {
         el.classList.remove("expanded")
         el.classList.add("removed")
         setTimeout(() => {
