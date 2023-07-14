@@ -260,6 +260,9 @@ class Selection {
       await this.refresh()
     })
   }
+  #isFavorite(el) {
+    return el.querySelector(`button.favorite-file`)?.getAttribute(`data-favorited`) === "true"
+  }
   init () {
     //if (this.ds) this.ds.stop()
     if (this.ds) {
@@ -331,14 +334,12 @@ class Selection {
     })
   }
   async del() {
-    const confirmed = confirm("Delete the selected files from your device?")
+    const confirmed = confirm(`Delete the selected files from your device (liked files are skipped)?`)
     if (confirmed) {
-      let selected = this.els.map((el) => {
-        return el.getAttribute("data-src")
-      })
-      await this.api.del(selected)
-      let res = await this.app.db.files.where("file_path").anyOf(selected).delete()
-
+      let filteredSelection = this.els.filter((el) => !this.#isFavorite(el))
+      let filesToDelete = filteredSelection.map((el) => el.getAttribute("data-src"))
+      await this.api.del(filesToDelete)
+      let res = await this.app.db.files.where("file_path").anyOf(filesToDelete).delete()
 
       // get the next element to focus after deleting
 
@@ -346,7 +347,7 @@ class Selection {
       if (!focusEl) {
         focusEl = this.els[0].previousSibling
       }
-      for(let el of this.els) {
+      for(let el of filteredSelection) {
         el.classList.remove("expanded")
         el.classList.add("removed")
         setTimeout(() => {
